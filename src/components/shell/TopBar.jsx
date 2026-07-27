@@ -6,10 +6,14 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <div className="hdr-brand" onClick={() => go('overview')} title="Tanflow home">
-        <img className="logo" src="assets/brand/tanflow-icon.svg" alt="tanflow" width="26" height="26" />
-        <span className="brand-name">tanflow</span>
+        <img className="logo" src="assets/brand/tanflow-white.png" alt="tanflow" />
         <span className="brand-sub">Identity Security Cloud</span>
       </div>
+      <button className="gsearch" onClick={openPalette}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        <span className="gs-hint">Search identities, sessions, policies, resources…</span>
+        <kbd>⌘K</kbd>
+      </button>
       <button
         className="tenant"
         onClick={() => toast('ok', 'Environment selector', 'Connected to Meridian Global Bank — Production (eu-central-1). Switch tenants or environments here in the full product.')}
@@ -19,11 +23,6 @@ export default function TopBar() {
         <span className="t-name">Meridian Global Bank</span>
         <span className="t-env">Prod</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
-      </button>
-      <button className="gsearch" onClick={openPalette}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <span className="gs-hint">Search identities, sessions, policies, resources…</span>
-        <kbd>⌘K</kbd>
       </button>
       <div className="top-actions">
         <button className="icon-btn" title="Tanflow Copilot" onClick={() => toast('ok', 'Tanflow Copilot', 'AI assistant is analyzing your identity posture…')} aria-label="AI Copilot">
