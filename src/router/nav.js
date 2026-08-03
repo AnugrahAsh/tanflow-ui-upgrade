@@ -46,6 +46,12 @@ const EXTRA_ROUTES = [
   ['edit-profile', 'Edit Profile', 'My Profile'],
   ['create-sms-provider', 'Add SMS Provider', 'SMS Management'],
   ['create-sms-template', 'Add SMS Template', 'SMS Management'],
+  ['create-connection-group', 'New Connection Group', 'Connections'],
+  ['edit-connection-group', 'Edit Connection Group', 'Connections'],
+  ['license-v2', 'License Information', 'Configuration'],
+  ['role', 'Role', 'Roles'],
+  ['select-protocol', 'Select Protocol', 'Connections'],
+  ['create-connection', 'Create Connection', 'Connections'],
 ]
 EXTRA_ROUTES.forEach(([id, label, group]) => { ROUTE_META[id] = { id, label, group, badge: null } })
 

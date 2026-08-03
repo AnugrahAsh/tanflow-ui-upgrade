@@ -4,6 +4,9 @@ import { TooltipProvider } from './components/charts/Tooltip.jsx'
 import AppShell from './components/shell/AppShell.jsx'
 import StubView from './views/StubView.jsx'
 import CreateUser from './views/CreateUser.jsx'
+import CreateConnectionGroup from './views/CreateConnectionGroup.jsx'
+import RoleDetail from './views/RoleDetail.jsx'
+import CreateConnection from './views/CreateConnection.jsx'
 import { VIEWS } from './views/index.js'
 import { ALL_IDS, DEFAULT_ROUTE } from './router/nav.js'
 
@@ -20,6 +23,9 @@ export default function App() {
                 return <Route key={id} path={id} element={View ? <View /> : <StubView id={id} />} />
               })}
               <Route path="edit-user/:id" element={<CreateUser />} />
+              <Route path="edit-connection-group/:id" element={<CreateConnectionGroup />} />
+              <Route path="role/:id" element={<RoleDetail />} />
+              <Route path="create-connection/:protocol" element={<CreateConnection />} />
               <Route path="*" element={<Navigate to={`/${DEFAULT_ROUTE}`} replace />} />
             </Route>
           </Routes>

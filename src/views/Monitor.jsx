@@ -24,7 +24,7 @@ export default function Monitor() {
         actions={
           <>
             <span className="hrow" style={{ gap: 7, fontSize: '12.25px', color: 'var(--mut)', marginRight: 6 }}><span className="live-dot" />3 external live</span>
-            <button className="btn btn-sec" onClick={() => go('access-report')}><Icon name="reports" />Access report</button>
+            <button className="btn btn-sec" onClick={() => toast('ok', 'Export CSV', 'External-access monitor exported as CSV (demo).')}><Icon name="download" />Export CSV</button>
           </>
         }
       />

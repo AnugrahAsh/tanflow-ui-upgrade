@@ -48,6 +48,9 @@ import CreateChangeRequest from './CreateChangeRequest.jsx'
 import EditProfile from './EditProfile.jsx'
 import CreateSmsProvider from './CreateSmsProvider.jsx'
 import CreateSmsTemplate from './CreateSmsTemplate.jsx'
+import CreateConnectionGroup from './CreateConnectionGroup.jsx'
+import LicenseV2 from './LicenseV2.jsx'
+import SelectProtocol from './SelectProtocol.jsx'
 
 // Route id -> view component. Every id in the nav model is now implemented.
 export const VIEWS = {
@@ -100,4 +103,7 @@ export const VIEWS = {
   'edit-profile': EditProfile,
   'create-sms-provider': CreateSmsProvider,
   'create-sms-template': CreateSmsTemplate,
+  'create-connection-group': CreateConnectionGroup,
+  'license-v2': LicenseV2,
+  'select-protocol': SelectProtocol,
 }

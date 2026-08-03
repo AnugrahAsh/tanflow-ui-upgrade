@@ -1,54 +1,78 @@
+import { useState } from 'react'
 import Icon from '../components/Icon.jsx'
 import { PageHead, KpiTile } from '../components/ui.jsx'
-import { Badge } from '../components/primitives.jsx'
+import { Avatar, Badge } from '../components/primitives.jsx'
 import { useApp } from '../context/AppContext.jsx'
-import { ROLES } from '../data/mockData.js'
+import { ROLES, permCount, roleNum } from '../data/rolesData.js'
+
+const MembersCell = ({ members }) => {
+  if (!members.length) return <span style={{ color: 'var(--faint)' }}>—</span>
+  const shown = members.slice(0, 4)
+  const extra = members.length - shown.length
+  return (
+    <div className="hrow" style={{ gap: 8 }}>
+      <span className="av-stack">{shown.map((m) => <Avatar key={m.username} name={m.name} cls="av-sm" />)}</span>
+      {extra > 0 && <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--mut)', background: 'var(--surface-2)', borderRadius: 999, padding: '2px 7px' }}>+{extra}</span>}
+      <span className="num" style={{ fontSize: '12.5px', color: 'var(--ink-2)', fontWeight: 550 }}>{members.length}</span>
+    </div>
+  )
+}
+const permOf = (r) => r.all ? 'All' : r.baseline ? null : permCount(r)
 
 export default function Roles() {
-  const { toast, go } = useApp()
+  const { go } = useApp()
+  const [q, setQ] = useState('')
+  const rows = ROLES.filter((r) => !q || (r.name + r.desc).toLowerCase().includes(q.toLowerCase()))
+  const assignments = ROLES.reduce((n, r) => n + r.members.length, 0)
+  const fullAdmin = ROLES.filter((r) => r.fullAdmin).length
+
   return (
     <>
       <PageHead
         title="Roles"
-        sub="Enterprise RBAC — business roles mapped to entitlements across systems, with SoD awareness and certification cadence."
-        actions={
-          <>
-            <button className="btn btn-sec" onClick={() => toast('ok', 'Role mining', 'AI role mining analyzes 48K identities for candidate roles (demo).')}><Icon name="sparkle" />Mine roles</button>
-            <button className="btn btn-pri" onClick={() => go('create-role')}><Icon name="plus" />New role</button>
-          </>
-        }
+        sub="Roles bundle API permissions. Members inherit them, controlling what they can read, create, update and delete across every resource."
+        actions={<button className="btn btn-pri" onClick={() => go('create-role')}><Icon name="plus" />Create role</button>}
       />
+
       <div className="kpi-row cols-4">
-        <KpiTile label="Defined roles" icon="roles" val="386" foot="92% of access via roles" />
-        <KpiTile label="Direct-assigned exceptions" icon="warnTri" val="2,104" delta={-14} goodUp={false} foot="target < 1,500" />
-        <KpiTile label="Roles with SoD conflicts" icon="policies" val="8" foot="2 critical" />
-        <KpiTile label="Certification overdue" icon="certs" val="1" foot="Treasury Dealer" />
+        <KpiTile label="Defined roles" icon="roles" val={ROLES.length} foot="0 custom" />
+        <KpiTile label="Role assignments" icon="users" val={assignments} foot="across all members" />
+        <KpiTile label="Full-administration roles" icon="shieldCheck" val={fullAdmin} foot="grant system.administer" />
+        <KpiTile label="Roles with SoD conflicts" icon="policies" val="0" foot="no conflicting pairs" />
       </div>
+
       <div className="card">
-        <div className="toolbar">
-          <div className="search-inp" style={{ width: 280 }}><Icon name="search" size={14} /><input className="inp" placeholder="Search roles…" /></div>
-          <div className="tb-spacer" />
-          <button className="btn btn-sec btn-sm"><Icon name="download" />Export matrix</button>
+        <div className="card-pad" style={{ paddingBottom: 0 }}>
+          <div className="search-inp" style={{ width: 340, marginBottom: 4 }}><Icon name="search" size={14} /><input className="inp" placeholder="Search roles…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         </div>
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>Role</th><th>Scope</th><th className="td-right">Assigned</th><th className="td-right">Entitlements</th><th>SoD</th><th>Owner</th><th>Next certification</th><th style={{ width: 70 }} /></tr></thead>
+            <thead><tr><th>Role</th><th>Type</th><th>Members</th><th className="td-right">Permissions</th><th>SoD</th><th style={{ width: 70 }} /></tr></thead>
             <tbody>
-              {ROLES.map((r) => (
-                <tr key={r.n} onClick={() => toast('ok', r.n, 'Opens role composition & assignment graph (demo).')}>
-                  <td className="td-main">{r.n}</td>
-                  <td style={{ color: 'var(--mut)' }}>{r.scope}</td>
-                  <td className="td-right td-num">{r.assign}</td>
-                  <td className="td-right td-num">{r.ents}</td>
-                  <td>{r.sod ? <Badge tone="bad" label={`${r.sod} conflict${r.sod > 1 ? 's' : ''}`} /> : <Badge tone="ok" label="Clean" />}</td>
-                  <td style={{ color: 'var(--mut)' }}>{r.owner}</td>
-                  <td>{r.cert === 'Overdue' ? <Badge tone="bad" label="Overdue" /> : <span className="num" style={{ color: 'var(--mut)' }}>{r.cert}</span>}</td>
-                  <td><div className="row-actions"><button className="mini-btn"><Icon name="eye" size={14} /></button><button className="mini-btn"><Icon name="edit" size={14} /></button></div></td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const perm = permOf(r)
+                const num = roleNum(r)
+                return (
+                  <tr key={r.id} onClick={() => go('role/' + num)}>
+                    <td style={{ maxWidth: 560 }}>
+                      <div className="td-main">{r.name}</div>
+                      <div style={{ fontSize: '11.75px', color: 'var(--mut)', marginTop: 3, lineHeight: 1.5 }}>{r.desc}</div>
+                    </td>
+                    <td><span className="tag">{r.type}</span></td>
+                    <td><MembersCell members={r.members} /></td>
+                    <td className="td-right">{perm === 'All' ? <span className="tag tag-acc">All</span> : perm == null ? <span style={{ color: 'var(--faint)' }}>—</span> : <span className="num" style={{ fontWeight: 600 }}>{perm}</span>}</td>
+                    <td><Badge tone="ok" label="Clean" /></td>
+                    <td><div className="row-actions">
+                      <button className="mini-btn" title="View" onClick={(e) => { e.stopPropagation(); go('role/' + num) }}><Icon name="eye" size={14} /></button>
+                      <button className="mini-btn" title="View" onClick={(e) => { e.stopPropagation(); go('role/' + num) }}><Icon name="edit" size={14} /></button>
+                    </div></td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
+        <div className="tbl-foot"><span>{rows.length} of {ROLES.length} roles</span></div>
       </div>
     </>
   )
