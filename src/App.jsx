@@ -7,6 +7,7 @@ import CreateUser from './views/CreateUser.jsx'
 import CreateConnectionGroup from './views/CreateConnectionGroup.jsx'
 import RoleDetail from './views/RoleDetail.jsx'
 import CreateConnection from './views/CreateConnection.jsx'
+import ReportDetail from './views/ReportDetail.jsx'
 import { VIEWS } from './views/index.js'
 import { ALL_IDS, DEFAULT_ROUTE } from './router/nav.js'
 
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="edit-connection-group/:id" element={<CreateConnectionGroup />} />
               <Route path="role/:id" element={<RoleDetail />} />
               <Route path="create-connection/:protocol" element={<CreateConnection />} />
+              <Route path="report/:id" element={<ReportDetail />} />
               <Route path="*" element={<Navigate to={`/${DEFAULT_ROUTE}`} replace />} />
             </Route>
           </Routes>

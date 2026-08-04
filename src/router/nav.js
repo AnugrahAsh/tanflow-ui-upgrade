@@ -52,6 +52,12 @@ const EXTRA_ROUTES = [
   ['role', 'Role', 'Roles'],
   ['select-protocol', 'Select Protocol', 'Connections'],
   ['create-connection', 'Create Connection', 'Connections'],
+  ['my-connections', 'My Connections', 'Home'],
+  ['recordings', 'Connection History', 'Dashboard'],
+  ['report', 'Report', 'Reports'],
+  // Security section — grouped under Security to match the console layout.
+  ['mfa', 'MFA', 'Security'],
+  ['vault', 'Password Vault', 'Security'],
 ]
 EXTRA_ROUTES.forEach(([id, label, group]) => { ROUTE_META[id] = { id, label, group, badge: null } })
 

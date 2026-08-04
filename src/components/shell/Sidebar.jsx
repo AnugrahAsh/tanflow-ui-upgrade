@@ -22,6 +22,7 @@ const SECTIONS = [
     { label: 'Audit Log', icon: 'audit', route: 'audit', star: true },
   ] },
   { title: 'DASHBOARD', items: [
+    { label: 'My Connections', icon: 'link', route: 'my-connections' },
     { label: 'Overview', icon: 'overview', route: 'overview' },
     { label: 'Active Sessions', icon: 'sessions', route: 'sessions', badge: 6, star: true, dot: true },
     { label: 'History', icon: 'recordings', route: 'recordings' },
