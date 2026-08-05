@@ -16,77 +16,68 @@ function Star({ ghost, size = 14 }) {
 // Sidebar navigation model (mirrors the reference layout). Items with a `route`
 // navigate to an existing view; the rest highlight in place.
 const SECTIONS = [
-  { title: 'PINNED', pinned: true, items: [
-    { label: 'Active Sessions', icon: 'sessions', route: 'sessions', badge: 6, star: true, dot: true },
-    { label: 'Discovery', icon: 'search', route: 'discovery', badge: 2, star: true, dot: true },
-    { label: 'Audit Log', icon: 'audit', route: 'audit', star: true },
-  ] },
   { title: 'DASHBOARD', items: [
-    { label: 'My Connections', icon: 'link', route: 'my-connections' },
-    { label: 'Overview', icon: 'overview', route: 'overview' },
-    { label: 'Active Sessions', icon: 'sessions', route: 'sessions', badge: 6, star: true, dot: true },
+    { label: 'My Connections', icon: 'grid', route: 'my-connections' },
+    { label: 'Active Sessions', icon: 'sessions', route: 'sessions' },
     { label: 'History', icon: 'recordings', route: 'recordings' },
   ] },
   { title: 'CONNECTIONS', items: [
     { label: 'All Connections', icon: 'sso', route: 'connections' },
-    { label: 'Connection Groups', icon: 'folder', route: 'connection-groups', star: 'ghost' },
-    { label: 'Sharing Profiles', icon: 'integrations', route: 'sharing-profiles' },
-    { label: 'Discovery', icon: 'search', route: 'discovery', badge: 2, star: true, dot: true },
+    { label: 'Connection Groups', icon: 'folder', route: 'connection-groups' },
+    { label: 'Sharing Profiles', icon: 'share2', route: 'sharing-profiles' },
   ] },
   { title: 'USERS', items: [
     { label: 'All Users', icon: 'users', route: 'users' },
     { label: 'User Groups', icon: 'groups', route: 'groups' },
     { label: 'Roles', icon: 'roles', route: 'roles' },
-    { label: 'Directory', icon: 'directory', route: 'directory' },
-    { label: 'Provisioning', icon: 'provisioning', route: 'provisioning' },
   ] },
   { title: 'ACCESS MANAGEMENT', items: [
     { label: 'Time-Based Access', icon: 'calendar', route: 'time-based-access' },
-    { label: 'Change Management', icon: 'edit', route: 'change-management', badge: 5, dot: true },
-    { label: 'Just-in-Time', icon: 'jit', route: 'jit' },
-  ] },
-  { title: 'GOVERNANCE', items: [
-    { label: 'Certifications', icon: 'certs', route: 'certs' },
-    { label: 'Policies & SoD', icon: 'policies', route: 'policies' },
-    { label: 'Compliance', icon: 'compliance', route: 'compliance' },
+    { label: 'Change Management', icon: 'edit', route: 'change-management' },
   ] },
   { title: 'SECURITY', items: [
-    { label: 'MFA', icon: 'mfa', route: 'mfa' },
+    { label: 'MFA', icon: 'fingerprint', route: 'mfa' },
     { label: 'Password Vault', icon: 'vault', route: 'vault' },
-    { label: 'Secrets', icon: 'lock', route: 'secrets' },
     { label: 'Command Restrictions', icon: 'commands', route: 'commands' },
   ] },
-  { title: 'AUTHENTICATION', items: [
-    { label: 'Single Sign-On', icon: 'sso', route: 'sso' },
-    { label: 'AAA Server', icon: 'server', route: 'aaa' },
-    { label: 'Adaptive Access', icon: 'adaptive', route: 'adaptive' },
-  ] },
   { title: 'EXTERNAL ACCESS', items: [
-    { label: 'Monitor', icon: 'eye', route: 'monitor', badge: 3, dot: true },
-    { label: 'Access Report', icon: 'reports', route: 'access-report' },
+    { label: 'Monitor', icon: 'eye', route: 'monitor' },
   ] },
   { title: 'REPORTS', items: [
-    { label: 'Reports', icon: 'reports', route: 'reports' },
-    { label: 'Audit Log', icon: 'audit', route: 'audit', star: true },
-    { label: 'Alerts', icon: 'alerts', route: 'alerts', badge: 3, dot: true },
-    { label: 'Access Analytics', icon: 'analytics', route: 'analytics' },
+    { label: 'All Reports', icon: 'reports', route: 'reports' },
   ] },
-  { title: 'PLATFORM', items: [
-    { label: 'Integrations', icon: 'integrations', route: 'integrations' },
+  { title: 'SETTINGS', items: [
     { label: 'Settings', icon: 'settings', route: 'settings' },
-  ] },
-  { title: 'CONFIGURATION', items: [
     { label: 'SSO Providers', icon: 'sso', route: 'sso-providers' },
     { label: 'Email Management', icon: 'mail', route: 'email-management' },
     { label: 'SMS Management', icon: 'phone', route: 'sms-management' },
-    { label: 'Command Audits', icon: 'commands', route: 'command-audits' },
+    { label: 'Profile', icon: 'user', route: 'my-profile' },
     { label: 'License', icon: 'certs', route: 'license' },
-    { label: 'My Profile', icon: 'user', route: 'my-profile' },
-    { label: 'Sign-in & Errors', icon: 'warnTri', route: 'sign-in-errors' },
   ] },
 ]
 
+const ALL_ITEMS = SECTIONS.flatMap((sec) => sec.items)
+const DEFAULT_FAVS = ['sessions', 'connections']
 const itemAt = (id) => { const [s, i] = id.split('-').map(Number); return SECTIONS[s]?.items[i] }
+
+// Clickable favourite toggle shown on every item — gold when favourited,
+// faint and reveal-on-hover otherwise.
+function FavStar({ active, onToggle }) {
+  return (
+    <span
+      role="button"
+      tabIndex={-1}
+      title={active ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={active ? 'Remove from favorites' : 'Add to favorites'}
+      onClick={(e) => { e.stopPropagation(); onToggle() }}
+      className={`sd-star sd-star-btn ${active ? 'fav' : 'ghost'}`}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+    </span>
+  )
+}
 
 export default function Sidebar({ onToggleNav }) {
   const { go, toggleFlyout } = useApp()
@@ -95,6 +86,11 @@ export default function Sidebar({ onToggleNav }) {
   const [query, setQuery] = useState('')
   const [closed, setClosed] = useState({})
   const [activeId, setActiveId] = useState(null)
+  const [favs, setFavs] = useState(() => {
+    try { const s = localStorage.getItem('tanflow.favs'); return new Set(s ? JSON.parse(s) : DEFAULT_FAVS) } catch { return new Set(DEFAULT_FAVS) }
+  })
+  useEffect(() => { try { localStorage.setItem('tanflow.favs', JSON.stringify([...favs])) } catch { /* ignore */ } }, [favs])
+  const toggleFav = (route) => setFavs((prev) => { const n = new Set(prev); if (n.has(route)) n.delete(route); else n.add(route); return n })
 
   // Keep the highlighted item in sync with the active route. If the current
   // selection already matches the route (e.g. a duplicate entry the user
@@ -115,7 +111,9 @@ export default function Sidebar({ onToggleNav }) {
     if (it.route) go(it.route)
   }
 
-  let anyShown = false
+  const favList = ALL_ITEMS.filter((it) => favs.has(it.route) && (!q || it.label.toLowerCase().includes(q)))
+  const favClosed = !q && !!closed.FAVORITES
+  let anyShown = favList.length > 0
   const sections = SECTIONS.map((sec, s) => {
     const items = sec.items
       .map((it, i) => ({ it, id: `${s}-${i}` }))
@@ -140,7 +138,7 @@ export default function Sidebar({ onToggleNav }) {
             <span className="sd-ico"><Icon name={it.icon} size={17} />{it.dot && <span className="sd-dot" />}</span>
             <span className="sd-label">{it.label}</span>
             {it.badge ? <span className="sd-badge">{it.badge}</span> : null}
-            {it.star ? <Star ghost={it.star === 'ghost'} /> : null}
+            {it.route && <FavStar active={favs.has(it.route)} onToggle={() => toggleFav(it.route)} />}
           </button>
         ))}
       </div>
@@ -156,7 +154,27 @@ export default function Sidebar({ onToggleNav }) {
         </div>
       </div>
       <nav className="sd-nav">
-        {anyShown ? sections : <div className="sd-empty">No matches</div>}
+        {anyShown ? (
+          <>
+            {favList.length > 0 && (
+              <div className="sd-sec">
+                <button className={`sd-sec-h ${favClosed ? 'closed' : ''}`} onClick={() => toggleSec('FAVORITES')} aria-expanded={!favClosed}>
+                  <Star size={12} />
+                  <span className="sd-sec-lbl">FAVORITES</span>
+                  <Icon name="chevD" size={13} className="sd-sec-chev" />
+                </button>
+                {!favClosed && favList.map((it) => (
+                  <button key={`fav-${it.route}`} className={`sd-item ${current === it.route ? 'on' : ''}`} onClick={() => go(it.route)}>
+                    <span className="sd-ico"><Icon name={it.icon} size={17} /></span>
+                    <span className="sd-label">{it.label}</span>
+                    <FavStar active onToggle={() => toggleFav(it.route)} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {sections}
+          </>
+        ) : <div className="sd-empty">No matches</div>}
       </nav>
       <div className="sd-foot">
         <div className="sd-user" onClick={() => toggleFlyout('user')} title="Anika Rao — Global Security Admin">

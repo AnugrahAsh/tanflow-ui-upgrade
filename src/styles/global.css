@@ -648,6 +648,26 @@ kbd {
   color: var(--line-2)
 }
 
+/* interactive favourite toggle */
+.sd-star-btn {
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s, color .12s
+}
+
+.sd-item:hover .sd-star-btn {
+  opacity: 1
+}
+
+.sd-star-btn.fav {
+  opacity: 1;
+  color: var(--warn-core)
+}
+
+.sd-star-btn.ghost:hover {
+  color: var(--warn-core)
+}
+
 /* footer user */
 .sd-foot {
   flex: none;
