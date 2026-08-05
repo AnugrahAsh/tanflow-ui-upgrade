@@ -6,7 +6,7 @@ import { useApp } from '../context/AppContext.jsx'
 import ImportConnections from '../components/ImportConnections.jsx'
 import AdvancedFilters from '../components/AdvancedFilters.jsx'
 import ConnectionDrawer from './ConnectionDrawer.jsx'
-import { sessionPath } from '../lib/session.js'
+import StartSessionModal from '../components/StartSessionModal.jsx'
 
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase())
 const PROTO_STYLE = {
@@ -15,29 +15,35 @@ const PROTO_STYLE = {
 }
 const C = (name, proto, icon, host, env, cred, used, sessions, status, risk, extra = {}) => ({ name, proto, icon, host, env, cred, used, sessions, status, risk, ...extra })
 const GROUPS = [
-  { name: 'TANFLOW CORE', live: 1, conns: [
-    C('TANFLOWAD01', 'RDP', 'sessions', '192.168.1.80', 'Prod', 'vaulted', 'Live now', 20, 'Live', 'Medium', { star: true, liveDot: true, watching: 1 }),
-    C('BTSPLPAMPRODBD01', 'MYSQL', 'db', 'btsplpamprodbd01:3306', 'Prod', 'vaulted', '2 mos ago', 1, 'Idle', 'High'),
-    C('Tanflow Docs Portal', 'HTTPS', 'globe', 'docs.tanflow.io', 'Prod', 'direct', '2 mos ago', 24, 'Idle', 'Low'),
-    C('TANFLOWAPP01', 'SSH', 'commands', '146.56.51.196', 'Prod', 'vaulted', '21 days ago', 16, 'Idle', 'Low'),
-  ] },
-  { name: 'BTS LAB', live: 1, conns: [
-    C('BTSPAMDEMO01', 'SSH', 'commands', '10.0.0.150', 'Demo', 'vaulted', 'Live now', 12, 'Live', 'Medium', { star: true, liveDot: true, watching: 2 }),
-    C('BTSIAMRETEST01', 'SSH', 'commands', '10.0.0.107', 'Test', 'direct', '3 days ago', 4, 'Idle', 'Low'),
-    C('BTSIAMRETEST02', 'SSH', 'commands', '10.0.0.156', 'Test', 'direct', '5 days ago', 2, 'Idle', 'Low'),
-    C('BTSIDAMDEMO01', 'SSH', 'commands', '10.0.0.231', 'Demo', 'direct', '1 wk ago', 3, 'Idle', 'Low'),
-    C('BTSIDAMDEMODB01', 'POSTGRESQL', 'db', 'btsidamdemodb01:5432', 'Demo', 'direct', '1 wk ago', 6, 'Idle', 'Medium'),
-    C('BTSPAMDEMO02', 'SSH', 'commands', '10.0.0.154', 'Demo', 'direct', '2 wks ago', 5, 'Idle', 'Low'),
-    C('BTSPAMDEV01', 'SSH', 'commands', '10.0.0.57', 'Dev', 'direct', '2 wks ago', 8, 'Idle', 'Low'),
-    C('BTSPLVAPTBD01', 'POSTGRESQL', 'db', 'btsplvaptbd01:5432', 'Test', 'vaulted', '1 mo ago', 2, 'Idle', 'Medium'),
-    C('BTSPLVAPTSRV01', 'SSH', 'commands', '80.225.251.38', 'Test', 'direct', '1 mo ago', 3, 'Unreachable', 'Low'),
-    C('testconnection', 'SSH', 'commands', '10.10.10.10', 'Test', 'direct', '2 mos ago', 1, 'Unreachable', 'Low'),
-    C('TESTORACLE', 'ORACLE', 'db', 'testoracle:1521', 'Test', 'direct', 'never', 0, 'Unreachable', 'High', { warn: true }),
-  ] },
-  { name: 'LOCAL TOOLS', live: 0, conns: [
-    C('LOCALSUPPORTDB', 'POSTGRESQL', 'db', 'localhost:5432', 'Local', 'vaulted', '3 days ago', 4, 'Idle', 'Low'),
-    C('PGADMIN WORKBENCH', 'DB CLIENT', 'db', 'pgadmin.tanflow.local', 'Local', 'direct', '1 wk ago', 2, 'Idle', 'Low'),
-  ] },
+  {
+    name: 'TANFLOW CORE', live: 1, conns: [
+      C('TANFLOWAD01', 'RDP', 'sessions', '192.168.1.80', 'Prod', 'vaulted', 'Live now', 20, 'Live', 'Medium', { star: true, liveDot: true, watching: 1 }),
+      C('BTSPLPAMPRODBD01', 'MYSQL', 'db', 'btsplpamprodbd01:3306', 'Prod', 'vaulted', '2 mos ago', 1, 'Idle', 'High'),
+      C('Tanflow Docs Portal', 'HTTPS', 'globe', 'docs.tanflow.io', 'Prod', 'direct', '2 mos ago', 24, 'Idle', 'Low'),
+      C('TANFLOWAPP01', 'SSH', 'commands', '146.56.51.196', 'Prod', 'vaulted', '21 days ago', 16, 'Idle', 'Low'),
+    ]
+  },
+  {
+    name: 'BTS LAB', live: 1, conns: [
+      C('BTSPAMDEMO01', 'SSH', 'commands', '10.0.0.150', 'Demo', 'vaulted', 'Live now', 12, 'Live', 'Medium', { star: true, liveDot: true, watching: 2 }),
+      C('BTSIAMRETEST01', 'SSH', 'commands', '10.0.0.107', 'Test', 'direct', '3 days ago', 4, 'Idle', 'Low'),
+      C('BTSIAMRETEST02', 'SSH', 'commands', '10.0.0.156', 'Test', 'direct', '5 days ago', 2, 'Idle', 'Low'),
+      C('BTSIDAMDEMO01', 'SSH', 'commands', '10.0.0.231', 'Demo', 'direct', '1 wk ago', 3, 'Idle', 'Low'),
+      C('BTSIDAMDEMODB01', 'POSTGRESQL', 'db', 'btsidamdemodb01:5432', 'Demo', 'direct', '1 wk ago', 6, 'Idle', 'Medium'),
+      C('BTSPAMDEMO02', 'SSH', 'commands', '10.0.0.154', 'Demo', 'direct', '2 wks ago', 5, 'Idle', 'Low'),
+      C('BTSPAMDEV01', 'SSH', 'commands', '10.0.0.57', 'Dev', 'direct', '2 wks ago', 8, 'Idle', 'Low'),
+      C('BTSPLVAPTBD01', 'POSTGRESQL', 'db', 'btsplvaptbd01:5432', 'Test', 'vaulted', '1 mo ago', 2, 'Idle', 'Medium'),
+      C('BTSPLVAPTSRV01', 'SSH', 'commands', '80.225.251.38', 'Test', 'direct', '1 mo ago', 3, 'Unreachable', 'Low'),
+      C('testconnection', 'SSH', 'commands', '10.10.10.10', 'Test', 'direct', '2 mos ago', 1, 'Unreachable', 'Low'),
+      C('TESTORACLE', 'ORACLE', 'db', 'testoracle:1521', 'Test', 'direct', 'never', 0, 'Unreachable', 'High', { warn: true }),
+    ]
+  },
+  {
+    name: 'LOCAL TOOLS', live: 0, conns: [
+      C('LOCALSUPPORTDB', 'POSTGRESQL', 'db', 'localhost:5432', 'Local', 'vaulted', '3 days ago', 4, 'Idle', 'Low'),
+      C('PGADMIN WORKBENCH', 'DB CLIENT', 'db', 'pgadmin.tanflow.local', 'Local', 'direct', '1 wk ago', 2, 'Idle', 'Low'),
+    ]
+  },
 ]
 const PROTO_CHIPS = [['SSH', 9, 'commands'], ['PostgreSQL', 3, 'db'], ['RDP', 1, 'sessions'], ['MySQL', 1, 'db'], ['DB Client', 1, 'db'], ['HTTPS', 1, 'globe'], ['Oracle', 1, 'db']]
 const LIVE = [
@@ -48,7 +54,7 @@ const EMPTY_ADV = { env: new Set(), cred: new Set(), status: new Set(), risk: ne
 
 const StatCard = ({ icon, num, label }) => (
   <div className="card card-pad" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-    <span style={{ width: 44, height: 44, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={icon} size={20} style={{ color: 'var(--accent)' }} /></span>
+    <span style={{ width: 30, height: 30, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={icon} size={20} style={{ color: 'var(--accent)' }} /></span>
     <div><div style={{ fontSize: 24, fontWeight: 750, color: 'var(--ink)', lineHeight: 1 }}>{num}</div>
       <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--mut)', marginTop: 5 }}>{label}</div></div>
   </div>
@@ -59,8 +65,8 @@ const ProtoTile = ({ icon, proto, size = 30 }) => {
   return <span style={{ width: size, height: size, borderRadius: 'var(--r-sm)', background: s.tint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={icon} size={Math.round(size * 0.52)} style={{ color: s.color }} /></span>
 }
 const CredBadge = ({ cred }) => cred === 'vaulted'
-  ? <span className="hrow" style={{ gap: 5, fontSize: '11px', fontWeight: 600, color: 'var(--accent)', border: '1px solid var(--accent-line)', borderRadius: 999, padding: '2px 8px' }}><Icon name="unlock" size={11} />Vaulted</span>
-  : <span className="hrow" style={{ gap: 5, fontSize: '11px', fontWeight: 600, color: 'var(--warn-core)', border: '1px solid rgba(224,150,0,.4)', borderRadius: 999, padding: '2px 8px' }}><Icon name="lock" size={11} />Direct cred</span>
+  ? <span className="hrow" style={{ gap: 5, fontSize: '11px', fontWeight: 600, color: 'var(--accent)', border: '1px solid var(--accent-line)', borderRadius: 'var(--r-sm)', padding: '2px 8px' }}><Icon name="unlock" size={11} />Vaulted</span>
+  : <span className="hrow" style={{ gap: 5, fontSize: '11px', fontWeight: 600, color: 'var(--warn-core)', border: '1px solid rgba(224,150,0,.4)', borderRadius: 'var(--r-sm)', padding: '2px 8px' }}><Icon name="lock" size={11} />Direct cred</span>
 
 export default function Connections() {
   const { go, toast, openDrawer } = useApp()
@@ -71,6 +77,7 @@ export default function Connections() {
   const [fav, setFav] = useState(false)
   const [vaultedOnly, setVaultedOnly] = useState(false)
   const [adv, setAdv] = useState(EMPTY_ADV)
+  const [target, setTarget] = useState(null)
 
   const total = GROUPS.reduce((n, g) => n + g.conns.length, 0)
   const advCount = adv.env.size + adv.cred.size + adv.status.size + adv.risk.size
@@ -112,7 +119,7 @@ export default function Connections() {
       </div>
       <div className="hrow" style={{ justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid var(--hair)' }}>
         <span style={{ fontSize: '11.5px', color: 'var(--mut)' }}>{c.status === 'Live' ? 'Live now' : c.used} · {c.sessions} sessions</span>
-        <button className="btn btn-pri btn-sm" onClick={(e) => { e.stopPropagation(); go(sessionPath(c)) }}><Icon name="play" size={12} />Connect</button>
+        <button className="btn btn-pri btn-sm" onClick={(e) => { e.stopPropagation(); setTarget(c) }}><Icon name="play" size={12} />Connect</button>
       </div>
     </div>
   )
@@ -138,8 +145,8 @@ export default function Connections() {
         <div className="card card-pad" style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {PROTO_CHIPS.map(([n, ct, ic]) => (
-              <span key={n} className="hrow" style={{ gap: 7, padding: '6px 11px', border: '1px solid var(--line)', borderRadius: 999, fontSize: '12.5px', color: 'var(--ink-2)' }}>
-                <Icon name={ic} size={13} style={{ color: 'var(--mut)' }} />{n}<span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--mut)', background: 'var(--surface-2)', borderRadius: 999, padding: '1px 7px' }}>{ct}</span>
+              <span key={n} className="hrow" style={{ gap: 7, padding: '6px 11px', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', fontSize: '12.5px', color: 'var(--ink-2)' }}>
+                <Icon name={ic} size={13} style={{ color: 'var(--mut)' }} />{n}<span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--mut)', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)', padding: '1px 7px' }}>{ct}</span>
               </span>
             ))}
           </div>
@@ -151,7 +158,7 @@ export default function Connections() {
           <div className="search-inp" style={{ width: 250 }}><Icon name="search" size={14} /><input className="inp" placeholder="Search name, host, owner…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <button className="btn btn-sec btn-sm" style={fbtn(fav)} onClick={() => setFav((v) => !v)}><Icon name="star" size={13} />Favorites</button>
           <button className="btn btn-sec btn-sm" style={vbtn(vaultedOnly)} onClick={() => setVaultedOnly((v) => !v)}><Icon name="lock" size={13} />Vaulted</button>
-          <button className="btn btn-sec btn-sm" style={advCount ? vbtn(true) : undefined} onClick={() => setAdvOpen(true)}><Icon name="filter" size={13} />Advanced{advCount > 0 && <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: 999, padding: '0 6px', marginLeft: 2 }}>{advCount}</span>}</button>
+          <button className="btn btn-sec btn-sm" style={advCount ? vbtn(true) : undefined} onClick={() => setAdvOpen(true)}><Icon name="filter" size={13} />Advanced{advCount > 0 && <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--r-sm)', padding: '0 6px', marginLeft: 2 }}>{advCount}</span>}</button>
           <div className="tb-spacer" />
           <span style={{ fontSize: '12.5px', color: 'var(--mut)' }}>{shownCount} of {total} targets</span>
           <button className="btn btn-sec btn-sm" style={{ color: 'var(--accent)', borderColor: 'var(--accent-line)' }}><Icon name="folder" size={13} />Group</button>
@@ -164,7 +171,7 @@ export default function Connections() {
         <div className="hrow" style={{ gap: 12, padding: '10px 16px', borderTop: '1px solid var(--hair)', borderBottom: '1px solid var(--hair)', flexWrap: 'wrap' }}>
           <span className="hrow" style={{ gap: 7, fontSize: '12px', fontWeight: 700, color: 'var(--ok)' }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok)' }} />{LIVE.length} LIVE</span>
           {LIVE.map((s) => (
-            <div key={s.sess} className="hrow" style={{ gap: 8, padding: '4px 10px', border: '1px solid var(--line)', borderRadius: 999 }}>
+            <div key={s.sess} className="hrow" style={{ gap: 8, padding: '4px 10px', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
               <Avatar name={s.name} cls="av-sm" />
               <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>{s.name}</span>
               <span className="mono" style={{ fontSize: '11px', color: 'var(--mut)' }}>{s.sess}</span>
@@ -221,6 +228,7 @@ export default function Connections() {
 
       {importOpen && <ImportConnections onClose={() => setImportOpen(false)} />}
       {advOpen && <AdvancedFilters value={adv} onApply={setAdv} onClose={() => setAdvOpen(false)} />}
+      {target && <StartSessionModal target={target} onClose={() => setTarget(null)} />}
     </>
   )
 }
