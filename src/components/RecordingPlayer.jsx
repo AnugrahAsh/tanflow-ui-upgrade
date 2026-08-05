@@ -6,7 +6,9 @@ const DURATION = 662 // 11:02
 const SPEED_MULT = [1, 1.5, 2]
 const fmtPos = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
-const BOOKMARKS = [['0:53', 'login'], ['3:32', 'window opened'], ['6:37', 'config change'], ['9:16', 'file transfer'], ['10:36', 'logout']]
+const toSec = (t) => { const [m, s] = t.split(':').map(Number); return m * 60 + s }
+// [label time, description, seconds] — seconds drive the seek + timeline markers.
+const BOOKMARKS = [['0:53', 'login'], ['3:32', 'window opened'], ['6:37', 'config change'], ['9:16', 'file transfer'], ['10:36', 'logout']].map(([t, l]) => [t, l, toSec(t)])
 const SPEEDS = ['1x', '1.5x', '2x']
 // deterministic little activity waveform
 const wavePath = (seed, amp, base) => {
@@ -79,6 +81,10 @@ export default function RecordingPlayer({ rec, onClose }) {
   useEffect(() => { if (pos >= DURATION && playing) setPlaying(false) }, [pos, playing])
   const pct = (pos / DURATION) * 100
   const chip = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 999, background: '#161b2e', color: '#c7cede', fontSize: 12, cursor: 'pointer', border: '1px solid #232a44' }
+  const chipOn = { ...chip, background: '#241d47', color: '#e9e2ff', borderColor: '#7c5cf0' }
+  // The bookmark the playhead currently sits in (last one at/before pos).
+  const activeMark = BOOKMARKS.reduce((acc, b) => (pos + 0.5 >= b[2] ? b[2] : acc), null)
+  const jump = (t, l, sec) => { setPos(sec); toast('ok', `Seek ${t}`, `Jumped to “${l}” (demo).`) }
 
   return (
     <div style={{ position: fs ? 'fixed' : 'relative', inset: fs ? 0 : undefined, zIndex: fs ? 300 : undefined, background: '#0a0e1c', borderRadius: fs ? 0 : 'var(--r)', overflow: 'hidden', marginBottom: fs ? 0 : 16, boxShadow: 'var(--sh-lg)', display: 'flex', flexDirection: 'column', height: fs ? '100vh' : undefined }}>
@@ -102,12 +108,18 @@ export default function RecordingPlayer({ rec, onClose }) {
                 {screen && <path d={wavePath(3, 9, 22)} fill="none" stroke="#4d84ff" strokeWidth=".6" />}
                 {keys && <path d={wavePath(11, 7, 20)} fill="none" stroke="#22c55e" strokeWidth=".6" />}
               </svg>
+              {BOOKMARKS.map(([t, l, sec]) => (
+                <div key={t} title={`${t} — ${l}`} onClick={(e) => { e.stopPropagation(); jump(t, l, sec) }}
+                  style={{ position: 'absolute', top: 0, bottom: 0, left: `${(sec / DURATION) * 100}%`, width: 2, marginLeft: -1, background: activeMark === sec ? '#a78bfa' : 'rgba(167,139,250,.45)', cursor: 'pointer' }}>
+                  <span style={{ position: 'absolute', top: -3, left: -2.5, width: 7, height: 7, borderRadius: '50%', background: activeMark === sec ? '#a78bfa' : '#6d5bb0' }} />
+                </div>
+              ))}
               <div style={{ position: 'absolute', top: -2, bottom: -2, left: `${pct}%`, width: 2, background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,.6)', pointerEvents: 'none' }}><span style={{ position: 'absolute', top: -4, left: -3, width: 8, height: 8, borderRadius: '50%', background: '#fff' }} /></div>
             </div>
             <div className="hrow" style={{ justifyContent: 'space-between', fontSize: 11, color: '#6b7590', marginTop: 2 }}><span className="mono" style={{ color: '#c7cede' }}>{fmtPos(pos)}</span><span>11:02</span></div>
             <div className="hrow" style={{ gap: 8, padding: '10px 0', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: '#5a6480' }}>BOOKMARKS</span>
-              {BOOKMARKS.map(([t, l]) => <button key={t} style={chip} onClick={() => toast('ok', `Seek ${t}`, `Jumped to “${l}” (demo).`)}><Icon name="clock" size={12} style={{ color: '#a78bfa' }} />{t} {l}</button>)}
+              {BOOKMARKS.map(([t, l, sec]) => <button key={t} title={`Jump to ${t} — ${l}`} style={activeMark === sec ? chipOn : chip} onClick={() => jump(t, l, sec)}><Icon name="clock" size={12} style={{ color: '#a78bfa' }} />{t} {l}</button>)}
             </div>
           </div>
 

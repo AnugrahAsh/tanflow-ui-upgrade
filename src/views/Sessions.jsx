@@ -32,10 +32,10 @@ const RISK = {
 }
 const MfaTone = { FIDO2: { c: 'var(--ok)', bg: 'var(--ok-bg)' }, TOTP: { c: 'var(--accent)', bg: 'var(--accent-bg)' } }
 const ApprTone = { JIT: { c: 'var(--accent)', bg: 'var(--accent-bg)' }, 'Dual-control': { c: '#7C3AED', bg: '#EDE9FE' }, Auto: { c: 'var(--mut)', bg: 'var(--surface-2)' } }
-const Tag = ({ label, tone }) => <span style={{ fontSize: '11px', fontWeight: 600, color: tone.c, background: tone.bg, borderRadius: 6, padding: '2px 8px', whiteSpace: 'nowrap' }}>{label}</span>
+const Tag = ({ label, tone }) => <span style={{ fontSize: '11px', fontWeight: 600, color: tone.c, background: tone.bg, borderRadius: 'var(--r-sm)', padding: '2px 8px', whiteSpace: 'nowrap' }}>{label}</span>
 const RiskCell = ({ risk, score }) => {
   const r = RISK[risk]
-  return <span className="hrow" style={{ gap: 8 }}><span className="hrow" style={{ gap: 4, fontSize: '11.5px', fontWeight: 600, color: r.c, background: r.bg, borderRadius: 6, padding: '2px 8px' }}>{r.arrow ? <Icon name={r.arrow} size={10} /> : <span style={{ fontWeight: 700 }}>—</span>}{risk}</span><span className="num" style={{ color: 'var(--mut)' }}>{score}</span></span>
+  return <span className="hrow" style={{ gap: 8 }}><span className="hrow" style={{ gap: 4, fontSize: '11.5px', fontWeight: 600, color: r.c, background: r.bg, borderRadius: 'var(--r-sm)', padding: '2px 8px' }}>{r.arrow ? <Icon name={r.arrow} size={10} /> : <span style={{ fontWeight: 700 }}>—</span>}{risk}</span><span className="num" style={{ color: 'var(--mut)' }}>{score}</span></span>
 }
 const SevTag = ({ sev }) => <Tag label={sev} tone={{ Critical: RISK.Critical, High: RISK.High, Medium: RISK.Medium, Low: { c: 'var(--mut)', bg: 'var(--surface-2)' } }[sev]} />
 const EMPTY = { risk: new Set(), proto: new Set(), mfa: new Set(), approval: new Set() }
@@ -49,6 +49,8 @@ export default function Sessions() {
   const [advOpen, setAdvOpen] = useState(false)
   const [view, setView] = useState(null)
   const [shadow, setShadow] = useState(null)
+  const [sel, setSel] = useState(new Set())
+  const toggleSel = (id) => setSel((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
 
   const advCount = adv.risk.size + adv.proto.size + adv.mfa.size + adv.approval.size
   const toggleProto = (p) => setProtos((s) => { const n = new Set(s); n.has(p) ? n.delete(p) : n.add(p); return n })
@@ -68,6 +70,21 @@ export default function Sessions() {
   const rows = SESSIONS.filter(match)
   const live = SESSIONS.length
   const watched = SESSIONS.filter((s) => s.watchers > 0).length
+
+  // ── bulk selection (scoped to the rows currently visible) ──────────────────
+  const selCount = rows.filter((s) => sel.has(s.id)).length
+  const allSel = rows.length > 0 && selCount === rows.length
+  const someSel = selCount > 0 && !allSel
+  const toggleAll = () => setSel(allSel ? new Set() : new Set(rows.map((s) => s.id)))
+  const clearSel = () => setSel(new Set())
+  const selIds = rows.filter((s) => sel.has(s.id)).map((s) => s.id)
+  const bulk = (kind) => {
+    const list = selIds.join(', ')
+    if (kind === 'lock') toast('warn', `${selCount} session${selCount === 1 ? '' : 's'} locked`, `Input frozen for ${list} — users can watch but not type (demo).`)
+    if (kind === 'watch') toast('ok', `Watching ${selCount} session${selCount === 1 ? '' : 's'}`, `Joined ${list} as a read-only watcher (demo).`)
+    if (kind === 'terminate') toast('err', `${selCount} session${selCount === 1 ? '' : 's'} terminated`, `${list} killed · credentials rotated · incident opened (demo).`)
+    clearSel()
+  }
 
   const open = (s) => openDrawer(<SessionDrawer session={s} onShadow={() => { closeDrawer(); setShadow(s) }} onTerminate={() => { closeDrawer(); toast('err', 'Session terminated', `${s.id} killed · credential rotated · incident opened (demo).`) }} />)
   const chipStyle = (on) => on ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-bg)' } : undefined
@@ -101,7 +118,7 @@ export default function Sessions() {
           <button className="btn btn-sec btn-sm" style={chipStyle(riskHigh)} onClick={() => setRiskHigh((v) => !v)}><Icon name="filter" size={13} />Risk ≥ High</button>
           <button className="btn btn-sec btn-sm" style={chipStyle(protos.has('SSH'))} onClick={() => toggleProto('SSH')}>SSH</button>
           <button className="btn btn-sec btn-sm" style={chipStyle(protos.has('RDP'))} onClick={() => toggleProto('RDP')}>RDP</button>
-          <button className="btn btn-sec btn-sm" style={advCount ? chipStyle(true) : undefined} onClick={() => setAdvOpen(true)}><Icon name="filter" size={13} />Advanced{advCount > 0 && <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: 999, padding: '0 6px', marginLeft: 2 }}>{advCount}</span>}</button>
+          <button className="btn btn-sec btn-sm" style={advCount ? chipStyle(true) : undefined} onClick={() => setAdvOpen(true)}><Icon name="filter" size={13} />Advanced{advCount > 0 && <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--r-xs)', padding: '0 6px', marginLeft: 2 }}>{advCount}</span>}</button>
           <div className="tb-spacer" />
           <span style={{ fontSize: '12.5px', color: 'var(--mut)' }}>{rows.length} of {live} live</span>
           <button className="icon-btn" title="Columns"><Icon name="list" size={15} /></button>
@@ -116,16 +133,26 @@ export default function Sessions() {
           <button className="btn btn-sec btn-sm" onClick={() => toast('ok', 'View saved', 'Current filter set saved as a view (demo).')}><Icon name="plus" size={12} />Save view</button>
         </div>
 
+        {selCount > 0 && (
+          <div className="hrow" style={{ gap: 10, padding: '10px 16px', borderTop: '1px solid var(--accent-line)', borderBottom: '1px solid var(--accent-line)', background: 'var(--accent-bg)', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--accent)' }}>{selCount} selected</span>
+            <button className="btn btn-sec btn-sm" onClick={() => bulk('lock')}><Icon name="lock" size={13} />Lock selected</button>
+            <button className="btn btn-sec btn-sm" onClick={() => bulk('watch')}><Icon name="eye" size={13} />Watch selected</button>
+            <button className="btn btn-sec btn-sm" style={{ color: 'var(--bad)', borderColor: 'var(--bad-line)' }} onClick={() => bulk('terminate')}><Icon name="ban" size={13} />Terminate selected</button>
+            <span className="link" style={{ fontSize: '12.5px' }} onClick={clearSel}>Clear selection</span>
+          </div>
+        )}
+
         <div className="tbl-wrap">
           <table className="tbl">
             <thead><tr>
-              <th style={{ width: 30 }}><input type="checkbox" style={{ accentColor: 'var(--accent)' }} /></th>
+              <th style={{ width: 30 }}><input type="checkbox" title={allSel ? 'Clear selection' : 'Select all'} style={{ accentColor: 'var(--accent)', cursor: 'pointer' }} checked={allSel} ref={(el) => { if (el) el.indeterminate = someSel }} onChange={toggleAll} /></th>
               <th>Session</th><th>Identity</th><th>Account · Target</th><th>Protocol</th><th>Duration</th><th>MFA</th><th>Risk</th><th>Commands</th><th>Approval</th><th>Watchers</th>
             </tr></thead>
             <tbody>
               {rows.map((s) => (
-                <tr key={s.id} onClick={() => open(s)} style={s.risk === 'Critical' ? { boxShadow: 'inset 3px 0 0 var(--bad)' } : undefined}>
-                  <td><input type="checkbox" style={{ accentColor: 'var(--accent)' }} onClick={(e) => e.stopPropagation()} /></td>
+                <tr key={s.id} className="sess-row" onClick={() => open(s)} style={sel.has(s.id) ? { background: 'var(--accent-bg)' } : undefined}>
+                  <td><input type="checkbox" style={{ accentColor: 'var(--accent)', cursor: 'pointer' }} checked={sel.has(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggleSel(s.id)} /></td>
                   <td className="td-mono" style={{ fontSize: '11.75px' }}>{s.id}</td>
                   <td><div className="hrow" style={{ gap: 10 }}><Avatar name={s.name} cls="av-sm" /><div><div className="td-main">{s.name}</div><div className="td-sub">{s.role}</div></div></div></td>
                   <td><span className="mono" style={{ fontSize: '11.5px' }}><span style={{ color: 'var(--mut)' }}>{s.acct}@</span>{s.target}</span> <Tag label={s.env} tone={{ c: '#9A7B1A', bg: 'var(--warn-bg)' }} /></td>

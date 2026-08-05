@@ -5,6 +5,7 @@ import { Avatar } from '../components/primitives.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { PROFILE } from '../data/mockData.js'
 import StartSessionModal from '../components/StartSessionModal.jsx'
+import ConnectionDrawer from './ConnectionDrawer.jsx'
 
 const PROTO_STYLE = {
   SSH: { tint: '#FDF0E1', color: '#B4690E' }, RDP: { tint: '#E8F0FF', color: '#2563EB' }, HTTPS: { tint: '#F0EAFE', color: '#7C3AED' },
@@ -42,6 +43,7 @@ const ProtoTile = ({ icon, proto, size = 34 }) => {
   return <span style={{ width: size, height: size, borderRadius: 'var(--r-sm)', background: s.tint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={icon} size={Math.round(size * 0.52)} style={{ color: s.color }} /></span>
 }
 const Star = () => <svg viewBox="0 0 24 24" width="14" height="14" fill="#F5A623" stroke="#F5A623" style={{ flex: 'none' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+const StarBtn = ({ filled }) => <svg viewBox="0 0 24 24" width="15" height="15" style={{ fill: filled ? '#F5A623' : 'none', stroke: filled ? '#F5A623' : 'var(--faint)', strokeWidth: 2, flex: 'none' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
 
 // ── Find a target modal (target-focused command palette) ─────────────────────
 function FindTarget({ onPick, onClose }) {
@@ -83,7 +85,8 @@ function FindTarget({ onPick, onClose }) {
 }
 
 export default function MyConnections() {
-  const { go } = useApp()
+  const { go, openDrawer } = useApp()
+  const openConn = (c) => openDrawer(<ConnectionDrawer conn={{ ...c, liveDot: c.live }} onConnect={setTarget} />)
   const [q, setQ] = useState('')
   const [f, setF] = useState({ pinned: false, live: false, vaulted: false, approval: false })
   const [proto, setProto] = useState('All protocols')
@@ -91,6 +94,8 @@ export default function MyConnections() {
   const [grouped, setGrouped] = useState(true)
   const [view, setView] = useState('grid')
   const [target, setTarget] = useState(null)
+  const [favs, setFavs] = useState(() => new Set(CONNS.filter((c) => c.pinned).map((c) => c.name)))
+  const toggleFav = (name) => setFavs((prev) => { const n = new Set(prev); if (n.has(name)) n.delete(name); else n.add(name); return n })
   const [findOpen, setFindOpen] = useState(false)
 
   const now = new Date()
@@ -101,7 +106,7 @@ export default function MyConnections() {
 
   const match = (c) => {
     if (q && !(c.name + c.host + c.proto + c.group).toLowerCase().includes(q.toLowerCase())) return false
-    if (f.pinned && !c.pinned) return false
+    if (f.pinned && !favs.has(c.name)) return false
     if (f.live && !c.live) return false
     if (f.vaulted && c.cred !== 'vaulted') return false
     if (f.approval && !needsApproval(c)) return false
@@ -121,14 +126,20 @@ export default function MyConnections() {
   const fbtn = (on) => on ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-bg)' } : undefined
   const vbtn = (on) => (view === on ? { color: 'var(--accent)', borderColor: 'var(--accent-line)' } : undefined)
 
-  const Card = ({ c }) => (
-    <div className="card" style={{ borderLeft: c.live ? '3px solid var(--ok)' : undefined, cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onClick={() => setTarget(c)}>
+  const Card = ({ c }) => {
+    const isFav = favs.has(c.name)
+    return (
+    <div className={`card conn-card${isFav ? ' fav' : ''}`} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onClick={() => openConn(c)}>
       <div className="card-pad" style={{ paddingBottom: 12, flex: 1 }}>
-        <div className="hrow" style={{ gap: 12, marginBottom: 10 }}>
+        <div className="hrow" style={{ gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
           <ProtoTile icon={c.icon} proto={c.proto} size={34} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="hrow" style={{ gap: 7 }}>{c.pinned && <Star />}<span style={{ fontSize: '13.5px', fontWeight: 650, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span></div>
+            <div className="hrow" style={{ gap: 7 }}><span style={{ fontSize: '13.5px', fontWeight: 650, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span></div>
             <div className="mono" style={{ fontSize: '11.5px', color: 'var(--mut)', marginTop: 2 }}>{PROTO_LABEL[c.proto]} · {c.host}</div>
+          </div>
+          <div className="hrow" style={{ gap: 4, flex: 'none' }}>
+            <button className="icon-btn" title={isFav ? 'Remove from favorites' : 'Add to favorites'} onClick={(e) => { e.stopPropagation(); toggleFav(c.name) }}><StarBtn filled={isFav} /></button>
+            <button className="icon-btn" title="View connection" onClick={(e) => { e.stopPropagation(); openConn(c) }}><Icon name="eye" size={15} /></button>
           </div>
         </div>
         <div className="hrow" style={{ gap: 6, flexWrap: 'wrap' }}>
@@ -147,7 +158,8 @@ export default function MyConnections() {
         <button className="btn btn-pri btn-sm" onClick={(e) => { e.stopPropagation(); setTarget(c) }}><Icon name="play" size={12} />Connect</button>
       </div>
     </div>
-  )
+    )
+  }
 
   return (
     <>
@@ -227,10 +239,10 @@ export default function MyConnections() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 16, padding: 16 }}>{g.items.map((c) => <Card key={c.name} c={c} />)}</div>
               ) : (
                 g.items.map((c) => (
-                  <div key={c.name} onClick={() => setTarget(c)} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto 130px', alignItems: 'center', gap: 14, padding: '11px 16px', borderBottom: '1px solid var(--hair)', cursor: 'pointer' }}>
+                  <div key={c.name} onClick={() => openConn(c)} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto 130px', alignItems: 'center', gap: 14, padding: '11px 16px', borderBottom: '1px solid var(--hair)', cursor: 'pointer' }}>
                     <div className="hrow" style={{ gap: 12, minWidth: 0 }}>
                       <ProtoTile icon={c.icon} proto={c.proto} size={30} />
-                      {c.pinned && <Star />}
+                      {favs.has(c.name) && <Star />}
                       <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap' }}>{c.name}</span>
                       {c.live && <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ok)', flex: 'none' }} />}
                       <span className="mono" style={{ fontSize: '11.5px', color: 'var(--mut)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{PROTO_LABEL[c.proto]} · {c.host}</span>

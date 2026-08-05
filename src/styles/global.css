@@ -1055,6 +1055,8 @@ kbd {
 
 .toggle {
   position: relative;
+  display: inline-block;
+  vertical-align: middle;
   width: 34px;
   height: 20px;
   border-radius: 99px;
@@ -1123,6 +1125,34 @@ kbd {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r)
+}
+
+/* Connection card — interactive hover: green left accent + lift (no layout shift) */
+.conn-card {
+  border-left-width: 3px;
+  border-left-color: var(--line);
+  transition: box-shadow .16s, transform .16s, border-color .16s
+}
+
+.conn-card:hover {
+  border-color: var(--line-2);
+  border-left-color: var(--ok);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px -6px rgba(17, 24, 39, .22)
+}
+
+.conn-card.fav {
+  border-left-color: var(--ok)
+}
+
+/* Session row — red left accent on hover only */
+.tbl tbody tr.sess-row {
+  cursor: pointer;
+  transition: box-shadow .12s
+}
+
+.tbl tbody tr.sess-row:hover {
+  box-shadow: inset 3px 0 0 var(--bad)
 }
 
 .card-pad {

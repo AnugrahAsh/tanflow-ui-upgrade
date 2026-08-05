@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import { PageHead } from '../components/ui.jsx'
 import { Toggle } from '../components/primitives.jsx'
@@ -20,21 +21,23 @@ function SubjectItem({ label, sub, selected, onToggle }) {
 
 export default function CreateTimeBasedPolicy() {
   const { go, toast } = useApp()
+  const edit = useLocation().state?.edit || null
+  const editing = !!edit
   const [tab, setTab] = useState('params')
-  const [name, setName] = useState('')
-  const [recur, setRecur] = useState('Daily')
+  const [name, setName] = useState(edit?.name || '')
+  const [recur, setRecur] = useState(edit?.recur && RECUR.includes(edit.recur) ? edit.recur : 'Daily')
   const [conns, setConns] = useState(() => new Set())
   const [subjects, setSubjects] = useState(() => new Set())
   const toggle = (setter) => (key) => setter((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
   const toggleConn = toggle(setConns)
   const toggleSubject = toggle(setSubjects)
 
-  const create = () => { toast('ok', 'Policy created', `${name || 'New policy'} — ${conns.size} connection(s), ${subjects.size} subject(s) (demo).`); go('time-based-access') }
+  const create = () => { toast('ok', editing ? 'Schedule updated' : 'Policy created', `${name || 'New policy'} — ${conns.size} connection(s), ${subjects.size} subject(s) (demo).`); go('time-based-access') }
 
   return (
     <>
       <button className="btn btn-sec btn-sm" onClick={() => go('time-based-access')} style={{ marginBottom: 12 }}><Icon name="chevL" />Back</button>
-      <PageHead title="Create Time-Based Policy" sub="Define when specific users or groups can reach specific connections." />
+      <PageHead title={editing ? 'Edit Access Schedule' : 'Create Time-Based Policy'} sub={editing ? 'Update when these subjects can reach these connections.' : 'Define when specific users or groups can reach specific connections.'} />
 
       <div className="tabs">
         {TABS.map(([id, icon, label]) => (
@@ -111,7 +114,7 @@ export default function CreateTimeBasedPolicy() {
         </label>
         <div className="hrow" style={{ gap: 8 }}>
           <button className="btn btn-sec" onClick={() => go('time-based-access')}>Cancel</button>
-          <button className="btn btn-pri" onClick={create}><Icon name="check" />Create Policy</button>
+          <button className="btn btn-pri" onClick={create}><Icon name="check" />{editing ? 'Save changes' : 'Create Policy'}</button>
         </div>
       </div>
     </>

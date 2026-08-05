@@ -6,6 +6,8 @@ import { useApp } from '../context/AppContext.jsx'
 import { fmt } from '../lib/format.js'
 import { USERS } from '../data/mockData.js'
 import UserDrawer from './UserDrawer.jsx'
+import HistoryFilters from '../components/HistoryFilters.jsx'
+import SaveViewModal from '../components/SaveViewModal.jsx'
 
 const CHIPS = [
   ['priv', 'vault', 'Privileged'],
@@ -13,6 +15,17 @@ const CHIPS = [
   ['dormant', 'clock', 'Dormant'],
 ]
 const SEGMENTS = ['All', 'Active', 'Attention']
+const ADV_GROUPS = [
+  ['src', 'Source', ['Active Directory', 'Workday HR', 'Local']],
+  ['risk', 'Risk', ['Critical', 'High', 'Medium', 'Low']],
+  ['status', 'Status', ['Active', 'Dormant', 'Suspended']],
+  ['dept', 'Department', ['Finance', 'Treasury', 'IT Operations', 'Security Engineering', 'Retail Banking', 'Risk & Audit', 'HR', 'Trading Systems', 'Payments', 'Data Platform', 'Customer Ops', 'Core Banking']],
+]
+const EMPTY_ADV = { src: [], risk: [], status: [], dept: [] }
+const SEED_VIEWS = [
+  { id: 'v-priv', name: 'Privileged · riskiest first', q: '', chip: 'priv', seg: 'All', adv: EMPTY_ADV },
+  { id: 'v-mfa', name: 'MFA gaps', q: '', chip: 'nomfa', seg: 'All', adv: EMPTY_ADV },
+]
 
 // inline monospace token used in the import requirements list
 const Code = ({ children }) => (
@@ -96,6 +109,13 @@ export default function Users() {
   const [chip, setChip] = useState(null)
   const [seg, setSeg] = useState('All')
   const [importOpen, setImportOpen] = useState(false)
+  const [adv, setAdv] = useState(EMPTY_ADV)
+  const [advOpen, setAdvOpen] = useState(false)
+  const [views, setViews] = useState(SEED_VIEWS)
+  const [activeView, setActiveView] = useState(null)
+  const [saveOpen, setSaveOpen] = useState(false)
+
+  const advCount = Object.values(adv).reduce((n, v) => n + v.length, 0)
 
   const rows = useMemo(() => {
     let r = USERS
@@ -104,8 +124,28 @@ export default function Users() {
     if (chip === 'nomfa') r = r.filter((u) => !u.mfa)
     if (chip === 'dormant') r = r.filter((u) => u.status === 'Dormant')
     if (seg !== 'All') r = r.filter((u) => (seg === 'Active' ? u.status === 'Active' : u.status !== 'Active'))
+    if (adv.src.length) r = r.filter((u) => adv.src.includes(u.src))
+    if (adv.risk.length) r = r.filter((u) => adv.risk.includes(u.risk))
+    if (adv.status.length) r = r.filter((u) => adv.status.includes(u.status))
+    if (adv.dept.length) r = r.filter((u) => adv.dept.includes(u.dept))
     return r
-  }, [q, chip, seg])
+  }, [q, chip, seg, adv])
+
+  // ── saved views ───────────────────────────────────────────────────────────
+  const applyView = (v) => { setQ(v.q); setChip(v.chip); setSeg(v.seg); setAdv(v.adv); setActiveView(v.id) }
+  const removeView = (e, id) => { e.stopPropagation(); setViews((vs) => vs.filter((v) => v.id !== id)); if (activeView === id) setActiveView(null) }
+  const saveView = (name) => {
+    const v = { id: `v-${name.toLowerCase().replace(/\W+/g, '-')}-${views.length}`, name, q, chip, seg, adv }
+    setViews((vs) => [...vs, v]); setActiveView(v.id); setSaveOpen(false)
+    toast('ok', 'View saved', `“${name}” added to your views (demo).`)
+  }
+  const viewSummary = [
+    q && `search “${q}”`,
+    chip && CHIPS.find((c) => c[0] === chip)?.[2],
+    seg !== 'All' && (seg === 'Attention' ? 'needs attention' : seg),
+    advCount > 0 && `${advCount} advanced filter${advCount === 1 ? '' : 's'}`,
+    'sorted by name ↑',
+  ].filter(Boolean).join(' · ')
 
   const stop = (e, fn) => { e.stopPropagation(); fn() }
 
@@ -138,18 +178,36 @@ export default function Users() {
           </div>
           <div id="u-chips" className="hrow" style={{ gap: 7 }}>
             {CHIPS.map(([key, icon, label]) => (
-              <button key={key} className={`fchip ${chip === key ? 'on' : ''}`} onClick={() => setChip((c) => (c === key ? null : key))}>
+              <button key={key} className={`fchip ${chip === key ? 'on' : ''}`} onClick={() => { setChip((c) => (c === key ? null : key)); setActiveView(null) }}>
                 <Icon name={icon} size={12} />{label}
               </button>
             ))}
+            <button className={`fchip ${advCount ? 'on' : ''}`} onClick={() => setAdvOpen(true)}>
+              <Icon name="filter" size={12} />Advanced{advCount > 0 && <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--r-xs)', padding: '0 5px', marginLeft: 4 }}>{advCount}</span>}
+            </button>
           </div>
           <div className="tb-spacer" />
           <div className="seg" id="u-seg">
             {SEGMENTS.map((s) => (
-              <button key={s} className={seg === s ? 'on' : ''} onClick={() => setSeg(s)}>{s === 'Attention' ? 'Needs attention' : s}</button>
+              <button key={s} className={seg === s ? 'on' : ''} onClick={() => { setSeg(s); setActiveView(null) }}>{s === 'Attention' ? 'Needs attention' : s}</button>
             ))}
           </div>
-          <button className="btn btn-sec btn-sm"><Icon name="download" />Export</button>
+          <button className="btn btn-sec btn-sm" onClick={() => toast('ok', 'Export CSV', `${rows.length} identit${rows.length === 1 ? 'y' : 'ies'} exported to CSV (demo).`)}><Icon name="download" />Export</button>
+        </div>
+
+        <div className="hrow" style={{ gap: 8, padding: '9px 16px', borderTop: '1px solid var(--hair)', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: 'var(--faint)' }}>VIEWS</span>
+          {views.map((v) => {
+            const on = activeView === v.id
+            return (
+              <button key={v.id} className="hrow" title={`Apply “${v.name}”`} onClick={() => applyView(v)}
+                style={{ gap: 7, padding: '5px 9px 5px 10px', border: `1px solid ${on ? 'var(--accent)' : 'var(--line-2)'}`, borderRadius: 'var(--r-sm)', fontSize: '12.5px', fontWeight: 600, color: on ? 'var(--accent)' : 'var(--ink-2)', background: on ? 'var(--accent-bg)' : 'var(--surface)', cursor: 'pointer' }}>
+                <Icon name="star" size={12} style={{ color: on ? 'var(--accent)' : 'var(--faint)' }} />{v.name}
+                <span role="button" title="Remove view" onClick={(e) => removeView(e, v.id)} style={{ display: 'inline-flex', color: 'var(--faint)', marginLeft: 1 }}><Icon name="x" size={12} /></span>
+              </button>
+            )
+          })}
+          <button className="btn btn-sec btn-sm" onClick={() => setSaveOpen(true)}><Icon name="plus" size={12} />Save view</button>
         </div>
 
         <div className="tbl-wrap">
@@ -204,6 +262,8 @@ export default function Users() {
       </div>
 
       {importOpen && <ImportUsers onClose={() => setImportOpen(false)} />}
+      {advOpen && <HistoryFilters groups={ADV_GROUPS} value={adv} sub="Narrow identities by source system, risk, account status and department." onApply={(v) => { setAdv({ ...EMPTY_ADV, ...v }); setActiveView(null) }} onClose={() => setAdvOpen(false)} />}
+      {saveOpen && <SaveViewModal summary={viewSummary} onSave={saveView} onClose={() => setSaveOpen(false)} />}
     </>
   )
 }

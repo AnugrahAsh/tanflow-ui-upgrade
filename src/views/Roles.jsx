@@ -54,9 +54,14 @@ export default function Roles() {
                 const num = roleNum(r)
                 return (
                   <tr key={r.id} onClick={() => go('role/' + num)}>
-                    <td style={{ maxWidth: 560 }}>
-                      <div className="td-main">{r.name}</div>
-                      <div style={{ fontSize: '11.75px', color: 'var(--mut)', marginTop: 3, lineHeight: 1.5 }}>{r.desc}</div>
+                    <td>
+                      {/* td max-width is ignored by table layout and .tbl td is nowrap —
+                          constrain + wrap on an inner block so long descriptions can't
+                          bleed into the neighbouring columns. */}
+                      <div style={{ maxWidth: 560, whiteSpace: 'normal' }}>
+                        <div className="td-main">{r.name}</div>
+                        <div style={{ fontSize: '11.75px', color: 'var(--mut)', marginTop: 3, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{r.desc}</div>
+                      </div>
                     </td>
                     <td><span className="tag">{r.type}</span></td>
                     <td><MembersCell members={r.members} /></td>

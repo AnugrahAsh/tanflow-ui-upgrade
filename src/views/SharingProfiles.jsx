@@ -95,6 +95,13 @@ function SharingProfileModal({ profile, onClose }) {
 export default function SharingProfiles() {
   const { toast } = useApp()
   const [modal, setModal] = useState(null) // null | 'new' | profile object
+  const [profiles, setProfiles] = useState(PROFILES)
+  const [del, setDel] = useState(null) // profile pending deletion
+  const confirmDelete = () => {
+    setProfiles((ps) => ps.filter((p) => p.id !== del.id))
+    toast('warn', 'Profile deleted', `${del.name} removed — existing links minted from it stop working (demo).`)
+    setDel(null)
+  }
 
   return (
     <>
@@ -110,7 +117,7 @@ export default function SharingProfiles() {
       />
 
       <div className="kpi-row cols-4">
-        <KpiTile label="Sharing profiles" icon="integrations" val="4" foot="3 read-only · 1 interactive" />
+        <KpiTile label="Sharing profiles" icon="integrations" val={profiles.length} foot={`${profiles.filter((p) => p.mode === 'Read-only').length} read-only · ${profiles.filter((p) => p.mode === 'Interactive').length} interactive`} />
         <KpiTile label="Links minted (30d)" icon="mail" val="23" delta={12} foot="all single-use, email-bound" />
         <KpiTile label="Guests watching now" icon="eye" val="1" foot={<span className="hrow" style={{ gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--ok)' }} />external auditor on RETEST</span>} />
         <KpiTile label="Revoked mid-session" icon="ban" val="2" foot="last 90 days" />
@@ -120,16 +127,24 @@ export default function SharingProfiles() {
         <CardHeader title="Sharing profiles" sub="Reusable join rules — one profile per target, minted only by its creator" />
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>Profile</th><th>Primary connection</th><th>Join mode</th><th className="td-right">Links minted</th><th>Created by</th><th>Last used</th></tr></thead>
+            <thead><tr><th>Profile</th><th>Primary connection</th><th>Join mode</th><th className="td-right">Links minted</th><th>Created by</th><th>Last used</th><th style={{ width: 78 }} /></tr></thead>
             <tbody>
-              {PROFILES.map((p) => (
-                <tr key={p.id} onClick={() => setModal(p)}>
+              {profiles.length === 0 ? (
+                <tr><td colSpan={7}><div className="empty" style={{ padding: '44px 20px' }}><div className="e-ic"><Icon name="integrations" size={20} /></div><div className="e-t">No sharing profiles</div><div className="e-s">Create a profile to define how guests may join a session.</div><button className="btn btn-pri btn-sm" style={{ marginTop: 14 }} onClick={() => setModal('new')}><Icon name="plus" size={13} />New sharing profile</button></div></td></tr>
+              ) : profiles.map((p) => (
+                <tr key={p.id} onClick={() => setModal(p)} style={{ cursor: 'pointer' }}>
                   <td className="td-main">{p.name}</td>
                   <td><ConnCell icon={p.icon} name={p.conn} /></td>
                   <td>{p.mode === 'Interactive' ? <span className="tag tag-acc">Interactive</span> : <span className="tag">Read-only</span>}</td>
                   <td className="td-right td-num">{p.minted}</td>
                   <td><div className="hrow" style={{ gap: 9 }}><Avatar name={p.by} cls="av-sm" /><span style={{ fontSize: '12.75px' }}>{p.by}</span></div></td>
                   <td style={{ color: 'var(--mut)' }}>{p.last}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button className="mini-btn" title="Edit profile" onClick={(e) => { e.stopPropagation(); setModal(p) }}><Icon name="edit" size={14} /></button>
+                      <button className="mini-btn danger" title="Delete profile" onClick={(e) => { e.stopPropagation(); setDel(p) }}><Icon name="trash" size={14} /></button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -164,6 +179,28 @@ export default function SharingProfiles() {
       </div>
 
       {modal && <SharingProfileModal key={modal === 'new' ? 'new' : modal.id} profile={modal === 'new' ? null : modal} onClose={() => setModal(null)} />}
+
+      {del && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(17,24,39,.42)' }} onClick={() => setDel(null)} />
+          <div className="card" style={{ position: 'relative', width: 'min(440px, 96vw)', boxShadow: 'var(--sh-lg)' }}>
+            <div className="card-pad">
+              <div className="hrow" style={{ justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+                <div className="hrow" style={{ gap: 12 }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 'var(--r-sm)', background: 'var(--bad-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name="trash" size={18} style={{ color: 'var(--bad)' }} /></span>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>Delete “{del.name}”?</div>
+                </div>
+                <button className="icon-btn" onClick={() => setDel(null)} aria-label="Close"><Icon name="x" size={16} /></button>
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--mut)', lineHeight: 1.55 }}>This profile can no longer be used to mint join links.{del.minted > 0 && <> Its <b style={{ color: 'var(--ink)' }}>{del.minted} existing link{del.minted === 1 ? '' : 's'}</b> stop working immediately.</>} Sessions already recorded are unaffected.</div>
+              <div className="hrow" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
+                <button className="btn btn-sec" onClick={() => setDel(null)}>Cancel</button>
+                <button className="btn btn-danger" onClick={confirmDelete}><Icon name="trash" />Delete profile</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

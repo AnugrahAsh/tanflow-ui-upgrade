@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Icon from './Icon.jsx'
 
 // Advanced-filters slide-over for Connection History. `groups` = [[key,label,options]].
-export default function HistoryFilters({ groups, value, onApply, onClose }) {
+export default function HistoryFilters({ groups, value, onApply, onClose, sub = 'Narrow connection records by user, target, purpose and recording status.' }) {
   const [sel, setSel] = useState(() => Object.fromEntries(groups.map(([k]) => [k, new Set(value[k] || [])])))
   const toggle = (g, v) => setSel((s) => { const n = new Set(s[g]); n.has(v) ? n.delete(v) : n.add(v); return { ...s, [g]: n } })
   const reset = () => setSel(Object.fromEntries(groups.map(([k]) => [k, new Set()])))
@@ -13,7 +13,7 @@ export default function HistoryFilters({ groups, value, onApply, onClose }) {
         <button className="icon-btn drawer-close" onClick={onClose} aria-label="Close"><Icon name="x" size={16} /></button>
         <div className="drawer-h">
           <div style={{ fontSize: 18, fontWeight: 700, padding: '4px 0 2px' }}>Advanced Filters</div>
-          <div style={{ fontSize: '12.5px', color: 'var(--mut)', paddingBottom: 14 }}>Narrow connection records by user, target, purpose and recording status.</div>
+          <div style={{ fontSize: '12.5px', color: 'var(--mut)', paddingBottom: 14 }}>{sub}</div>
         </div>
         <div className="drawer-body">
           {groups.map(([key, label, opts]) => (

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Navigate } from 'react-router-dom'
+import { useParams, useLocation, Navigate } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import ProtoMark from '../components/ProtoMark.jsx'
 import { useApp } from '../context/AppContext.jsx'
@@ -144,46 +144,59 @@ const Toggle = ({ on, set, label, help }) => (
 export default function CreateConnection() {
   const { go, toast } = useApp()
   const { protocol } = useParams()
+  const loc = useLocation()
+  const edit = loc.state?.edit || null
+  const editing = !!edit
   const cat = categoryOf(protocol)
   const schema = SCHEMAS[protocol]
   const [tab, setTab] = useState('config')
-  const [vals, setVals] = useState({})
-  const [name, setName] = useState('')
-  const [location, setLocation] = useState(LOCATIONS[0])
-  const [vault, setVault] = useState(false)
+  const [vals, setVals] = useState(() => {
+    if (!editing || !edit.host) return {}
+    const h = edit.host, i = h.lastIndexOf(':')
+    const hostname = i > 0 ? h.slice(0, i) : h
+    const port = i > 0 ? h.slice(i + 1) : ''
+    const hk = cat === 'B' ? 'db-hostname' : 'hostname'
+    const pk = cat === 'B' ? 'db-port' : 'port'
+    const base = { [hk]: hostname }
+    if (port) base[pk] = port
+    return base
+  })
+  const [name, setName] = useState(edit?.name || '')
+  const [location, setLocation] = useState(() => LOCATIONS.find((l) => l === (edit?.group || '').toUpperCase()) || LOCATIONS[0])
+  const [vault, setVault] = useState(edit?.cred === 'vaulted')
   const [client, setClient] = useState(cat === 'C' ? protocol : GUI_CLIENTS[0])
-  const [flags, setFlags] = useState({ reset: false, record: false, url: '' })
+  const [flags, setFlags] = useState({ reset: false, record: false, url: editing && cat === 'D' && edit.host ? `https://${edit.host}` : '' })
   const set = (id, v) => setVals((p) => ({ ...p, [id]: v }))
   const meta = PROTO_META[protocol]
   if (!meta) return <Navigate to="/select-protocol" replace />
 
   const create = () => {
     if (!name.trim()) { toast('bad', 'Missing name', 'Connection name is required.'); return }
-    toast('ok', 'Connection created', `${name} (${meta.name}) registered behind the gateway (demo).`)
+    toast('ok', editing ? 'Connection updated' : 'Connection created', `${name} (${meta.name}) ${editing ? 'changes saved' : 'registered behind the gateway'} (demo).`)
     go('connections')
   }
 
   const Header = ({ icon, title }) => (
     <div className="hrow" style={{ gap: 14, marginBottom: 18, alignItems: 'flex-start' }}>
-      <button className="btn btn-sec btn-sm" onClick={() => go('select-protocol')} style={{ marginTop: 2 }}><Icon name="arrowLeft" size={15} />Back</button>
+      <button className="btn btn-sec btn-sm" onClick={() => go(editing ? 'connections' : 'select-protocol')} style={{ marginTop: 2 }}><Icon name="arrowLeft" size={15} />Back</button>
       <span style={{ width: 44, height: 44, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={icon} size={21} style={{ color: 'var(--accent)' }} /></span>
       <div><div style={{ fontSize: 21, fontWeight: 700, letterSpacing: '-.02em', color: 'var(--ink)' }}>{title}</div>
-        <div style={{ fontSize: '13px', color: 'var(--mut)', marginTop: 2 }}>Configure a new target for users to connect to.</div></div>
+        <div style={{ fontSize: '13px', color: 'var(--mut)', marginTop: 2 }}>{editing ? 'Update this connection’s configuration.' : 'Configure a new target for users to connect to.'}</div></div>
     </div>
   )
   const Footer = () => (
     <div className="hrow" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 16, padding: '13px 18px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', boxShadow: 'var(--sh-sm)' }}>
       <button className="btn btn-sec" onClick={() => go('connections')}>Cancel</button>
-      <button className="btn btn-pri" onClick={create}><Icon name="check" />Create Connection</button>
+      <button className="btn btn-pri" onClick={create}><Icon name="check" />{editing ? 'Save changes' : 'Create Connection'}</button>
     </div>
   )
 
   // ── Category C: DB GUI client ──────────────────────────────────────────────
   if (cat === 'C') return (
     <>
-      <Header icon="db" title="New Connection" />
+      <Header icon="db" title={editing ? 'Edit Connection' : 'New Connection'} />
       <div className="card"><div className="card-pad">
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Create Database Client Connection</div>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>{editing ? 'Edit' : 'Create'} Database Client Connection</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 640 }}>
           <div className="field"><label>SELECT DATABASE CLIENT <span style={{ color: 'var(--bad)' }}>*</span></label>
             <select className="sel" value={client} onChange={(e) => setClient(e.target.value)}>{GUI_CLIENTS.map((c) => <option key={c} value={c}>{PROTO_META[c].name}</option>)}</select></div>
@@ -200,9 +213,9 @@ export default function CreateConnection() {
   // ── Category D: Web App ────────────────────────────────────────────────────
   if (cat === 'D') return (
     <>
-      <Header icon="globe" title="New Web App" />
+      <Header icon="globe" title={editing ? 'Edit Web App' : 'New Web App'} />
       <div className="card"><div className="card-pad">
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Create Web App Connection</div>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>{editing ? 'Edit' : 'Create'} Web App Connection</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 720 }}>
           <div className="field"><label>CONNECTION NAME <span style={{ color: 'var(--bad)' }}>*</span></label><input className="inp" placeholder="e.g. Internal Dashboard" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div className="field"><label>LOCATION</label><select className="sel" value={location} onChange={(e) => setLocation(e.target.value)}>{LOCATIONS.map((l) => <option key={l}>{l}</option>)}</select></div>
@@ -218,7 +231,7 @@ export default function CreateConnection() {
   // ── Categories A / B: 2-tab shell ──────────────────────────────────────────
   return (
     <>
-      <Header icon="link" title="New Connection" />
+      <Header icon="link" title={editing ? 'Edit Connection' : 'New Connection'} />
       <div className="tabs">
         <button className={`tab ${tab === 'config' ? 'on' : ''}`} onClick={() => setTab('config')}><Icon name="settings" size={14} />Configuration</button>
         <button className={`tab ${tab === 'attributes' ? 'on' : ''}`} onClick={() => setTab('attributes')}><Icon name="sliders" size={14} />Attributes</button>
