@@ -709,7 +709,7 @@ kbd {
   align-items: center;
   justify-content: center;
   border-radius: var(--r-sm);
-  color: var(--ink-2);
+  color: black;
   transition: background .12s, color .12s
 }
 
@@ -720,7 +720,8 @@ kbd {
 
 .sd-collapse svg {
   width: 16px;
-  height: 16px
+  height: 16px;
+  color: black;
 }
 
 .sd-empty {
@@ -2467,6 +2468,36 @@ tr:hover .row-actions {
 
   100% {
     opacity: 0
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg)
+  }
+}
+
+@keyframes loginFloat {
+
+  0%,
+  100% {
+    transform: translate(0, 0)
+  }
+
+  50% {
+    transform: translate(0, -22px)
+  }
+}
+
+@keyframes loginRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
   }
 }
 

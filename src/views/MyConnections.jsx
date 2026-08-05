@@ -4,6 +4,7 @@ import { KpiTile } from '../components/ui.jsx'
 import { Avatar } from '../components/primitives.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { PROFILE } from '../data/mockData.js'
+import { sessionPath } from '../lib/session.js'
 
 const PROTO_STYLE = {
   SSH: { tint: '#FDF0E1', color: '#B4690E' }, RDP: { tint: '#E8F0FF', color: '#2563EB' }, HTTPS: { tint: '#F0EAFE', color: '#7C3AED' },
@@ -54,7 +55,7 @@ function StartSession({ target, onClose }) {
   const [ticket, setTicket] = useState('')
   const [reason, setReason] = useState('')
   const valid = !prod || (ticket.trim() && reason.trim())
-  const launch = () => { toast('ok', 'Session launching', `${target.name} — ${win} JIT window opened via the gateway (demo).`); onClose(); go('sessions') }
+  const launch = () => { toast('ok', 'Session launching', `${target.name} — ${win} JIT window opened via the gateway (demo).`); onClose(); go(sessionPath(target)) }
   const ACCOUNTS = [['root', '2 hrs ago'], ['svc-deploy', '6 hrs ago']]
 
   return (

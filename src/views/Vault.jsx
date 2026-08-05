@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Icon from '../components/Icon.jsx'
 import { PageHead } from '../components/ui.jsx'
 import { useApp } from '../context/AppContext.jsx'
+import { sessionPath } from '../lib/session.js'
 
 const label = { fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--faint)' }
 const PROTO_STYLE = {
@@ -118,7 +119,7 @@ function VaultDrawer({ cred: c }) {
         </div>
 
         <div className="hrow" style={{ gap: 8, marginTop: 16 }}>
-          <button className="btn btn-pri btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { closeDrawer(); go('sessions') }}><Icon name="link" size={13} />Open connection</button>
+          <button className="btn btn-pri btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { closeDrawer(); go(sessionPath({ name: c.name, proto: c.proto, host: c.host })) }}><Icon name="link" size={13} />Open connection</button>
           <button className="btn btn-sec btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { closeDrawer(); go('audit') }}><Icon name="audit" size={13} />View audit trail</button>
         </div>
       </div>

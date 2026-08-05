@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext.jsx'
 import ImportConnections from '../components/ImportConnections.jsx'
 import AdvancedFilters from '../components/AdvancedFilters.jsx'
 import ConnectionDrawer from './ConnectionDrawer.jsx'
+import { sessionPath } from '../lib/session.js'
 
 const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase())
 const PROTO_STYLE = {
@@ -111,7 +112,7 @@ export default function Connections() {
       </div>
       <div className="hrow" style={{ justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid var(--hair)' }}>
         <span style={{ fontSize: '11.5px', color: 'var(--mut)' }}>{c.status === 'Live' ? 'Live now' : c.used} · {c.sessions} sessions</span>
-        <button className="btn btn-pri btn-sm" onClick={(e) => { e.stopPropagation(); go('sessions') }}><Icon name="play" size={12} />Connect</button>
+        <button className="btn btn-pri btn-sm" onClick={(e) => { e.stopPropagation(); go(sessionPath(c)) }}><Icon name="play" size={12} />Connect</button>
       </div>
     </div>
   )

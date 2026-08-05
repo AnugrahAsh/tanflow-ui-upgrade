@@ -58,6 +58,7 @@ const EXTRA_ROUTES = [
   // Security section — grouped under Security to match the console layout.
   ['mfa', 'MFA', 'Security'],
   ['vault', 'Password Vault', 'Security'],
+  ['commands', 'Command Restrictions', 'Security'],
 ]
 EXTRA_ROUTES.forEach(([id, label, group]) => { ROUTE_META[id] = { id, label, group, badge: null } })
 

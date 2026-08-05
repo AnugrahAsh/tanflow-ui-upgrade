@@ -1,6 +1,7 @@
 import Icon from '../components/Icon.jsx'
 import { Avatar } from '../components/primitives.jsx'
 import { useApp } from '../context/AppContext.jsx'
+import { sessionPath } from '../lib/session.js'
 
 const label = { fontSize: 11, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)' }
 
@@ -41,7 +42,7 @@ export default function ConnectionDrawer({ conn: c }) {
           </div>
         </div>
         <div className="hrow" style={{ paddingBottom: 14, borderBottom: '1px solid var(--hair)', flexWrap: 'wrap', gap: 8 }}>
-          <button className="btn btn-pri btn-sm" onClick={() => { closeDrawer(); go('sessions') }}><Icon name="play" />Connect</button>
+          <button className="btn btn-pri btn-sm" onClick={() => { closeDrawer(); go(sessionPath(c)) }}><Icon name="play" />Connect</button>
           <button className="btn btn-sec btn-sm" onClick={() => toast('ok', 'Edit connection', `Edit ${c.name} configuration (demo).`)}><Icon name="edit" />Edit</button>
           <button className="btn btn-sec btn-sm" onClick={() => toast('ok', 'Credential checkout', 'MFA step-up required to reveal (demo).')}><Icon name="unlock" />Check out credential</button>
           <button className="btn btn-danger btn-sm" style={{ marginLeft: 'auto' }} onClick={() => toast('warn', 'Freeze', `${c.name} frozen — new sessions blocked (demo).`)}><Icon name="ban" />Freeze</button>
