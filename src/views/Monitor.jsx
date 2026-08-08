@@ -144,7 +144,7 @@ export default function Monitor() {
         {tab === 'agents' ? (
           <div className="tbl-wrap">
             <table className="tbl">
-              <thead><tr><th>Connection</th><th>Protocol</th><th>Environment</th><th>Agent status</th><th>Monitoring</th><th>Last check-in</th><th>Events</th><th style={{ width: 60 }}>Actions</th></tr></thead>
+              <thead><tr><th>Connection</th><th>Protocol</th><th>Environment</th><th>Agent status</th><th>Monitoring</th><th>Last check-in</th><th>Events</th><th style={{ width: 140 }}>Actions</th></tr></thead>
               <tbody>
                 {shownAgents.length === 0 ? (
                   <tr><td colSpan={8}><div className="empty" style={{ padding: '48px 20px' }}><div className="e-ic"><Icon name="search" size={20} /></div><div className="e-t">No agents match</div><div className="e-s">Adjust the search or filters.</div></div></td></tr>
@@ -162,7 +162,18 @@ export default function Monitor() {
                     <td><span className={`toggle ${a.mon ? 'on' : ''}`} onClick={() => toggleMon(a.name)} role="switch" aria-checked={a.mon} /></td>
                     <td style={{ fontSize: '12.5px', color: a.status === 'Stale' ? 'var(--warn)' : 'var(--mut)' }}>{a.checkin}</td>
                     <td style={{ fontSize: '12.5px', fontWeight: 600, color: a.events == null ? 'var(--faint)' : 'var(--ink-2)' }}>{a.events == null ? '—' : a.events}</td>
-                    <td><button className="mini-btn" title="Agent actions" onClick={() => toast('ok', a.name, a.mon ? 'Redeploy · view events · disable monitoring (demo).' : 'Deploy agent to this target (demo).')}><Icon name="more" size={15} /></button></td>
+                    <td>
+                      {a.status === 'Not set up' || a.status === 'Awaiting' ? (
+                        <div className="hrow" style={{ gap: 6 }}>
+                          <button className="btn btn-sec btn-sm" style={{ padding: '4px 8px' }} onClick={() => toast('ok', 'Copied', 'Linux install script copied to clipboard.')} title="Copy Linux Bash script"><Icon name="commands" size={13} />Bash</button>
+                          <button className="btn btn-sec btn-sm" style={{ padding: '4px 8px' }} onClick={() => toast('ok', 'Copied', 'Windows install script copied to clipboard.')} title="Copy Windows PowerShell script"><Icon name="windows" size={13} />PS</button>
+                        </div>
+                      ) : (
+                        <div className="row-actions">
+                          <button className="mini-btn" title="Agent actions" onClick={() => toast('ok', a.name, 'View events · redeploy · disable monitoring (demo).')}><Icon name="more" size={15} /></button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

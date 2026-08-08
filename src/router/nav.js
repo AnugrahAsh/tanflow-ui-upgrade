@@ -6,7 +6,7 @@ export const NAV = [
   { grp: 'Identity', items: [['users', 'Users'], ['groups', 'Groups'], ['roles', 'Roles'], ['directory', 'Directory'], ['provisioning', 'Provisioning']] },
   { grp: 'Governance', items: [['requests', 'Access Requests', { count: 5 }], ['certs', 'Certifications'], ['policies', 'Policies & SoD'], ['compliance', 'Compliance']] },
   { grp: 'Privileged Access', items: [['vault', 'Credential Vault'], ['sessions', 'Live Sessions', { count: 6 }], ['recordings', 'Recordings'], ['jit', 'Just-in-Time'], ['commands', 'Command Policies']] },
-  { grp: 'Authentication', items: [['sso', 'Single Sign-On'], ['mfa', 'Multi-Factor'], ['aaa', 'AAA Server'], ['adaptive', 'Adaptive Access']] },
+  { grp: 'Authentication', items: [['sso', 'Single Sign-On'], ['mfa', 'Multi-Factor'], ['ldap', 'LDAP Integration'], ['aaa', 'AAA Server'], ['adaptive', 'Adaptive Access']] },
   { grp: 'Monitoring', items: [['audit', 'Audit Log'], ['alerts', 'Alerts', { alert: 3 }], ['reports', 'Reports']] },
   { grp: 'Platform', items: [['integrations', 'Integrations'], ['settings', 'Settings']] },
 ]

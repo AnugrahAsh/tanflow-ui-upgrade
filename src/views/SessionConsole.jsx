@@ -103,6 +103,7 @@ export default function SessionConsole() {
 
   const [tab, setTab] = useState('overview')
   const [collapsed, setCollapsed] = useState(false)
+  const [toolbarVisible, setToolbarVisible] = useState(false)
   const [fs, setFs] = useState(false)
   const [sec, setSec] = useState(0)
   const [logo, setLogo] = useState({ x: 18, y: 74 })
@@ -118,6 +119,7 @@ export default function SessionConsole() {
   ])
   const [dev, setDev] = useState({ clip: true, file: true, audio: true, printer: false, drive: false })
   const movedRef = useRef(false)
+  const toolbarTimerRef = useRef(null)
 
   useEffect(() => { const t = setInterval(() => setSec((s) => s + 1), 1000); return () => clearInterval(t) }, [])
   useEffect(() => {
@@ -129,12 +131,15 @@ export default function SessionConsole() {
     document.addEventListener('fullscreenchange', h)
     return () => document.removeEventListener('fullscreenchange', h)
   }, [])
+  useEffect(() => () => clearTimeout(toolbarTimerRef.current), [])
 
   const toggleFs = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.() }
   const close = () => { if (document.fullscreenElement) document.exitFullscreen?.(); navigate(-1) }
   const listing = FS[path] || [['(folder is empty)', 'info']]
   const up = () => { if (path.includes('/')) setPath(path.slice(0, path.lastIndexOf('/'))) }
   const dt = (k) => setDev((d) => ({ ...d, [k]: !d[k] }))
+  const showToolbar = () => { clearTimeout(toolbarTimerRef.current); setToolbarVisible(true) }
+  const queueToolbarHide = () => { clearTimeout(toolbarTimerRef.current); toolbarTimerRef.current = setTimeout(() => setToolbarVisible(false), 650) }
 
   // Draggable glass logo — mouse + touch, distinguishing a click (reopen) from
   // a drag (move). Works for real pointers and synthetic mouse events alike.
@@ -281,8 +286,9 @@ export default function SessionConsole() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0A1120', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'var(--sans)', userSelect: 'none' }}>
-      {/* Top bar */}
-      <div style={{ height: 56, flex: 'none', background: '#0A1120', borderBottom: '1px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
+      {/* A top-edge hover zone keeps session controls out of the remote desktop until needed. */}
+      <div onMouseEnter={showToolbar} onFocus={showToolbar} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, zIndex: 30 }} aria-label="Show session controls" />
+      <div onMouseEnter={showToolbar} onMouseLeave={queueToolbarHide} style={{ position: 'absolute', zIndex: 31, top: 0, left: 0, right: 0, height: 56, background: '#0A1120', borderBottom: '1px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px', transform: toolbarVisible ? 'translateY(0)' : 'translateY(-100%)', transition: 'transform .2s ease', boxShadow: toolbarVisible ? '0 8px 20px rgba(0,0,0,.24)' : 'none' }}>
         <img src="assets/brand/tanflow-logo-1200w-white.png" alt="Tanflow" style={{ height: 22, flex: 'none' }} />
         <div style={{ minWidth: 0 }}><div style={{ fontSize: '14px', fontWeight: 700, color: '#EAF0FB', lineHeight: 1.15 }}>{name}</div><div className="mono" style={{ fontSize: '11px', color: '#8496B8' }}>{user}@{host}</div></div>
         <div className="hrow" style={{ gap: 14, marginLeft: 8, flexWrap: 'wrap' }}>

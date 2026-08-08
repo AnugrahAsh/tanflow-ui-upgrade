@@ -16,6 +16,7 @@ import Jit from './Jit.jsx'
 import Commands from './Commands.jsx'
 import Sso from './Sso.jsx'
 import Mfa from './Mfa.jsx'
+import Ldap from './Ldap.jsx'
 import Aaa from './Aaa.jsx'
 import Adaptive from './Adaptive.jsx'
 import Audit from './Audit.jsx'
@@ -73,6 +74,7 @@ export const VIEWS = {
   commands: Commands,
   sso: Sso,
   mfa: Mfa,
+  ldap: Ldap,
   aaa: Aaa,
   adaptive: Adaptive,
   audit: Audit,

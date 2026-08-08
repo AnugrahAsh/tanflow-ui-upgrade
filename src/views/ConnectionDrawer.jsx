@@ -15,7 +15,7 @@ const PROTO_KEY = {
 }
 const protoKey = (p) => PROTO_KEY[(p || '').toUpperCase()] || (p || '').toLowerCase()
 
-export default function ConnectionDrawer({ conn: c, onConnect }) {
+export default function ConnectionDrawer({ conn: c, onConnect, adminOnly = false }) {
   const { toast, go, closeDrawer } = useApp()
   const navigate = useNavigate()
   const editConn = () => { closeDrawer(); navigate(`/create-connection/${protoKey(c.proto)}`, { state: { edit: { name: c.name, host: c.host, env: c.env, group: c.group, cred: c.cred, proto: c.proto } } }) }
@@ -57,7 +57,7 @@ export default function ConnectionDrawer({ conn: c, onConnect }) {
           </div>
         </div>
         <div className="hrow" style={{ paddingBottom: 14, borderBottom: '1px solid var(--hair)', flexWrap: 'wrap', gap: 8 }}>
-          <button className="btn btn-pri btn-sm" onClick={() => { closeDrawer(); onConnect ? onConnect(c) : go(sessionPath(c)) }}><Icon name="play" />Connect</button>
+          {!adminOnly && <button className="btn btn-pri btn-sm" onClick={() => { closeDrawer(); onConnect ? onConnect(c) : go(sessionPath(c)) }}><Icon name="play" />Connect</button>}
           <button className="btn btn-sec btn-sm" onClick={editConn}><Icon name="edit" />Edit</button>
           <button className="btn btn-sec btn-sm" onClick={() => toast('ok', 'Credential checkout', 'MFA step-up required to reveal (demo).')}><Icon name="unlock" />Check out credential</button>
           {frozen

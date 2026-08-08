@@ -3,6 +3,7 @@ import Icon from '../components/Icon.jsx'
 import ProtoMark from '../components/ProtoMark.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { PROTO_GROUPS, PROTO_META } from '../data/protocolSchema.js'
+import { PageHead } from '../components/ui.jsx'
 
 export default function SelectProtocol() {
   const { go } = useApp()
@@ -12,28 +13,76 @@ export default function SelectProtocol() {
 
   return (
     <>
-      <div className="hrow" style={{ gap: 14, marginBottom: 18, alignItems: 'flex-start' }}>
-        <button className="btn btn-sec btn-sm" onClick={() => go('connections')} style={{ marginTop: 2 }}><Icon name="arrowLeft" size={15} />Back</button>
-        <span style={{ width: 44, height: 44, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name="integrations" size={21} style={{ color: 'var(--accent)' }} /></span>
-        <div>
-          <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: '-.02em', color: 'var(--ink)' }}>Select Protocol</div>
-          <div style={{ fontSize: '13px', color: 'var(--mut)', marginTop: 2 }}>Choose the connection type you want to configure.</div>
+      <PageHead
+        title="Select Protocol"
+        sub="Choose the connection type you want to configure."
+        actions={
+          <button className="btn btn-sec" onClick={() => go('connections')}>
+            <Icon name="arrowLeft" />
+            Back
+          </button>
+        }
+      />
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="toolbar" style={{ padding: '12px 16px', borderBottom: 'none' }}>
+          <div className="search-inp" style={{ width: '100%', maxWidth: 420 }}>
+            <Icon name="search" size={14} />
+            <input className="inp" placeholder="Search protocols…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
         </div>
       </div>
 
-      <div className="search-inp" style={{ maxWidth: 420, marginBottom: 26 }}><Icon name="search" size={14} /><input className="inp" placeholder="Search protocols…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-
       {groups.length === 0 ? (
-        <div className="empty" style={{ padding: '56px 20px' }}><div className="e-ic"><Icon name="search" size={22} /></div><div className="e-t">No protocols match</div><div className="e-s">Try a different search term.</div></div>
+        <div className="empty" style={{ padding: '64px 20px' }}>
+          <div className="e-ic"><Icon name="search" size={22} /></div>
+          <div className="e-t">No protocols match</div>
+          <div className="e-s">Try a different search term.</div>
+        </div>
       ) : groups.map((g) => (
-        <div key={g.title} style={{ marginBottom: 30 }}>
-          <div style={{ fontSize: '15.5px', fontWeight: 700, color: 'var(--ink)' }}>{g.title}</div>
-          <div style={{ fontSize: '12.5px', color: 'var(--mut)', marginTop: 2, marginBottom: 14 }}>{g.sub}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 16 }}>
+        <div key={g.title} style={{ marginBottom: 32 }}>
+          <div className="hrow" style={{ gap: 12, marginBottom: 16 }}>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink)' }}>{g.title}</span>
+            <span style={{ fontSize: '12.5px', color: 'var(--mut)' }}>{g.sub}</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--line-2)', marginLeft: 8 }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {g.items.map((id) => (
-              <button key={id} className="card" onClick={() => go('create-connection/' + id)} style={{ padding: '28px 16px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, cursor: 'pointer', transition: 'box-shadow .12s, border-color .12s' }}>
-                <span style={{ height: 44, display: 'flex', alignItems: 'center' }}><ProtoMark id={id} size={40} /></span>
-                <span style={{ fontSize: '13px', fontWeight: 650, color: 'var(--ink)', textAlign: 'center' }}>{PROTO_META[id].name}</span>
+              <button
+                key={id}
+                className="card conn-card"
+                onClick={() => go('create-connection/' + id)}
+                style={{
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 'var(--r-sm)',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--line)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 'none'
+                }}>
+                  <ProtoMark id={id} size={24} />
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 650, color: 'var(--ink)', marginBottom: 2 }}>
+                    {PROTO_META[id].name}
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--mut)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Configure {PROTO_META[id].name} target
+                  </div>
+                </div>
+                <Icon name="arrowRight" size={16} style={{ color: 'var(--faint)', flex: 'none' }} />
               </button>
             ))}
           </div>

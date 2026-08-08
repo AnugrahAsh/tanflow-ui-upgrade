@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { wave } from '../lib/series.js'
 import RecordingPlayer from '../components/RecordingPlayer.jsx'
 import HistoryFilters from '../components/HistoryFilters.jsx'
+import SessionTranscript from '../components/SessionTranscript.jsx'
 
 const PURPOSE_TONE = {
   'TROUBLESHOOTING ISSUES': { c: '#9A6700', bg: '#FBF0D3' }, 'TESTING AND ACCESSIBILITY': { c: '#0E7C6B', bg: '#D6F0EB' },
@@ -56,6 +57,7 @@ export default function Recordings() {
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
   const [playing, setPlaying] = useState(null)
+  const [transcript, setTranscript] = useState(null)
 
   const reset = () => { setQ(''); setFrom(''); setTo(''); setFromT('00:00'); setToT('23:59'); setPurpose('All Purposes'); setAdv({ user: [], conn: [], rec: [] }); setPage(1) }
 
@@ -87,6 +89,7 @@ export default function Recordings() {
         actions={<button className="btn" style={{ background: '#1E9E5A', color: '#fff' }} onClick={() => toast('ok', 'Export CSV', `${filtered.length} connection records exported as CSV (demo).`)}><Icon name="download" />Export CSV</button>} />
 
       {playing && <RecordingPlayer rec={playing} onClose={() => setPlaying(null)} />}
+      {transcript && <SessionTranscript rec={transcript} onClose={() => setTranscript(null)} />}
 
       <div className="kpi-row cols-4">
         <KpiTile label="Connections (7d)" icon="recordings" val="312" foot={`${filtered.length} in current range`} />
@@ -128,7 +131,7 @@ export default function Recordings() {
 
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>Connection</th><th>User</th><th>Remote Host</th><th>Purpose</th><th>Date</th><th>Start Time</th><th>End Time</th><th>Duration</th><th style={{ textAlign: 'right' }}>Recording</th></tr></thead>
+            <thead><tr><th>Connection</th><th>User</th><th>Remote Host</th><th>Purpose</th><th>Date</th><th>Start Time</th><th>End Time</th><th>Duration</th><th style={{ textAlign: 'right' }}>Recording & transcript</th></tr></thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr><td colSpan={9}><div className="empty" style={{ padding: '48px 20px' }}><div className="e-ic"><Icon name="search" size={20} /></div><div className="e-t">No records match</div><div className="e-s">Adjust the date range, purpose or filters.</div></div></td></tr>
@@ -143,7 +146,7 @@ export default function Recordings() {
                   <td className="td-num" style={{ color: 'var(--mut)' }}>{r.end}</td>
                   <td className="td-num" style={{ color: 'var(--ink-2)' }}>{r.dur}</td>
                   <td style={{ textAlign: 'right' }}>{r.rec
-                    ? <button onClick={() => setPlaying(r)} style={{ background: '#7C3AED', color: '#fff', borderRadius: 999, padding: '5px 14px', fontSize: '11px', fontWeight: 700, letterSpacing: '.03em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>PLAY <Icon name="play" size={11} /></button>
+                    ? <span className="hrow" style={{ justifyContent: 'flex-end', gap: 6 }}><button onClick={() => setPlaying(r)} style={{ background: '#7C3AED', color: '#fff', borderRadius: 999, padding: '5px 12px', fontSize: '11px', fontWeight: 700, letterSpacing: '.03em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>PLAY <Icon name="play" size={11} /></button><button className="mini-btn" title="View transcript" aria-label={`View transcript for ${r.conn}`} onClick={() => setTranscript(r)}><Icon name="reports" size={13} /></button></span>
                     : <span style={{ color: 'var(--faint)', fontSize: '12px' }}>None</span>}</td>
                 </tr>
               ))}

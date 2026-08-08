@@ -13,33 +13,53 @@ const PROTO_STYLE = {
 }
 
 const VAULT = [
-  { name: 'BTSPLAPAM01', proto: 'SSH', host: '10.0.0.61', accounts: [
-    { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:9c21:e0…7be4', updated: '02 Aug 2026' },
-  ] },
-  { name: 'BTSPAMDEMO01', proto: 'SSH', host: '10.0.0.150', accounts: [
-    { user: 'root', kind: 'Password', updated: '28 Jul 2026' },
-    { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:4b70…c9e2', updated: '28 Jul 2026' },
-  ] },
-  { name: 'TANFLOWAD01', proto: 'RDP', host: '192.168.1.80', accounts: [
-    { user: 'Administrator', kind: 'Password', updated: '19 Jul 2026' },
-    { user: 'svc-join', kind: 'Password', updated: '19 Jul 2026' },
-  ] },
-  { name: 'BTSIDAMDEMO01', proto: 'SSH', host: '10.0.0.231', accounts: [
-    { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:1af0…22b9', updated: '14 Jul 2026' },
-  ] },
-  { name: 'TANFLOWAPP01', proto: 'SSH', host: '146.56.51.196', accounts: [
-    { user: 'appadmin', kind: 'Password', updated: '11 Jul 2026' },
-  ] },
-  { name: 'BTSPLPAMPRODBD01', proto: 'MySQL', host: 'btsplpamprodbd01:3306', accounts: [
-    { user: 'pamadmin', kind: 'Password', updated: '02 Jun 2026' },
-  ] },
-  { name: 'BTSPLVAPTBD01', proto: 'PostgreSQL', host: 'btsplvaptbd01:5432', accounts: [
-    { user: 'pamadmin', kind: 'Password', updated: '28 May 2026' },
-  ] },
+  {
+    name: 'BTSPLAPAM01', proto: 'SSH', host: '10.0.0.61', accounts: [
+      { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:9c21:e0…7be4', updated: '02 Aug 2026' },
+    ]
+  },
+  {
+    name: 'BTSPAMDEMO01', proto: 'SSH', host: '10.0.0.150', accounts: [
+      { user: 'root', kind: 'Password', updated: '28 Jul 2026' },
+      { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:4b70…c9e2', updated: '28 Jul 2026' },
+    ]
+  },
+  {
+    name: 'TANFLOWAD01', proto: 'RDP', host: '192.168.1.80', accounts: [
+      { user: 'Administrator', kind: 'Password', updated: '19 Jul 2026' },
+      { user: 'svc-join', kind: 'Password', updated: '19 Jul 2026' },
+    ]
+  },
+  {
+    name: 'BTSIDAMDEMO01', proto: 'SSH', host: '10.0.0.231', accounts: [
+      { user: 'ubuntu', kind: 'SSH key', fp: 'SHA256:1af0…22b9', updated: '14 Jul 2026' },
+    ]
+  },
+  {
+    name: 'TANFLOWAPP01', proto: 'SSH', host: '146.56.51.196', accounts: [
+      { user: 'appadmin', kind: 'Password', updated: '11 Jul 2026' },
+    ]
+  },
+  {
+    name: 'BTSPLPAMPRODBD01', proto: 'MySQL', host: 'btsplpamprodbd01:3306', accounts: [
+      { user: 'pamadmin', kind: 'Password', updated: '02 Jun 2026' },
+    ]
+  },
+  {
+    name: 'BTSPLVAPTBD01', proto: 'PostgreSQL', host: 'btsplvaptbd01:5432', accounts: [
+      { user: 'pamadmin', kind: 'Password', updated: '28 May 2026' },
+    ]
+  },
 ]
 
 const PROTOS = ['SSH', 'RDP', 'MySQL', 'PostgreSQL']
-const securedPill = { fontSize: '10px', fontWeight: 700, letterSpacing: '.04em', color: 'var(--warn)', background: 'var(--warn-bg)', border: '1px solid var(--warn-line)', borderRadius: 'var(--r-xs)', padding: '2px 6px', whiteSpace: 'nowrap', flex: 'none' }
+const MFA_METHODS = [
+  { key: 'totp', icon: 'phone', title: 'Authenticator app', desc: 'Use a time-based code from your authenticator.' },
+  { key: 'email', icon: 'mail', title: 'Email code', desc: 'Send a one-time code to your registered email.' },
+  { key: 'sms', icon: 'chat', title: 'SMS code', desc: 'Send a one-time code to your registered phone.' },
+  { key: 'passkey', icon: 'fingerprint', title: 'Passkey or security key', desc: 'Use a registered passkey or hardware key.' },
+]
+const securedPill = { fontSize: '10px', fontWeight: 700, letterSpacing: '.04em', color: 'var(--warn)', background: 'var(--warn-bg)', border: '1px solid var(--warn-line)', padding: '2px 6px', whiteSpace: 'nowrap', flex: 'none' }
 
 const ProtoTile = ({ proto, size = 38 }) => {
   const s = PROTO_STYLE[proto]
@@ -60,10 +80,85 @@ function VStat({ icon, num, sub, text, green }) {
 
 const AcctIcon = ({ kind }) => <Icon name={kind === 'SSH key' ? 'keyRound' : 'lock'} size={14} style={{ color: 'var(--faint)', flex: 'none' }} />
 
-function VaultDrawer({ cred: c }) {
+function VaultMfaModal({ request, method, stage, onClose, onContinue, onChooseMethod, onVerified, onReady }) {
+  const { toast } = useApp()
+  const [code, setCode] = useState('')
+  const current = MFA_METHODS.find((m) => m.key === method)
+  const isCode = method === 'totp' || method === 'email' || method === 'sms'
+  const target = request?.target
+  const account = request?.account
+  if (!target || !account) return null
+
+  const verify = () => {
+    if (isCode && code.replace(/\D/g, '').length !== 6) return
+    onVerified()
+  }
+  const title = stage === 'enroll' ? 'Set up MFA for vault reveal' : stage === 'ready' ? 'Verification complete' : 'Verify identity to reveal'
+  return (
+    <div className="modal-wrap show" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="m-scrim" onClick={onClose} />
+      <section className="card" style={{ position: 'relative', width: 'min(500px, 96vw)', boxShadow: 'var(--sh-lg)', overflow: 'hidden' }}>
+        <div className="hrow" style={{ justifyContent: 'space-between', gap: 12, padding: '16px 18px', borderBottom: '1px solid var(--hair)' }}>
+          <div className="hrow" style={{ gap: 10, minWidth: 0 }}>
+            <span style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={stage === 'enroll' ? 'shieldCheck' : 'lock'} size={17} style={{ color: 'var(--accent)' }} /></span>
+            <div style={{ minWidth: 0 }}><div style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--ink)' }}>{title}</div><div className="mono" style={{ fontSize: '11.5px', color: 'var(--mut)', marginTop: 2 }}>{account.user}@{target.name}</div></div>
+          </div>
+          <button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="x" size={16} /></button>
+        </div>
+
+        <div className="card-pad" style={{ paddingTop: 20 }}>
+          {stage === 'intro' && <>
+            <div style={{ textAlign: 'center', padding: '4px 18px 14px' }}>
+              <span style={{ width: 52, height: 52, borderRadius: 'var(--r)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="shieldCheck" size={24} style={{ color: 'var(--accent)' }} /></span>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginTop: 12 }}>Step-up verification required</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--mut)', lineHeight: 1.55, marginTop: 6 }}>Stored credentials are never revealed from an existing session alone. Verify your identity to continue; this action is audited.</div>
+            </div>
+            <button className="btn btn-pri" style={{ width: '100%', justifyContent: 'center' }} onClick={onContinue}><Icon name="shieldCheck" size={15} />Continue to verification</button>
+          </>}
+
+          {stage === 'enroll' && <>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ink)' }}>Enroll an MFA method</div>
+            <div style={{ fontSize: '12.5px', color: 'var(--mut)', lineHeight: 1.55, marginTop: 4, marginBottom: 15 }}>You do not have an MFA method registered. Set one up to unlock vault reveal. This does not change the tenant’s sign-in MFA policy.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {MFA_METHODS.map((m) => <button key={m.key} className="btn btn-sec" style={{ height: 'auto', justifyContent: 'flex-start', textAlign: 'left', padding: '11px 12px' }} onClick={() => onChooseMethod(m.key)}>
+                <span style={{ width: 30, height: 30, borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={m.icon} size={15} style={{ color: 'var(--accent)' }} /></span>
+                <span><span style={{ display: 'block', fontSize: '13px', fontWeight: 650, color: 'var(--ink)' }}>{m.title}</span><span style={{ display: 'block', fontSize: '11.5px', fontWeight: 400, color: 'var(--mut)', marginTop: 1 }}>{m.desc}</span></span><Icon name="chevR" size={15} style={{ color: 'var(--faint)', marginLeft: 'auto' }} />
+              </button>)}
+            </div>
+          </>}
+
+          {stage === 'challenge' && <>
+            <div className="hrow" style={{ gap: 10, alignItems: 'flex-start', padding: '12px 13px', border: '1px solid var(--accent-line)', background: 'var(--accent-bg)', borderRadius: 'var(--r-sm)', marginBottom: 16 }}>
+              <Icon name={current?.icon || 'shieldCheck'} size={17} style={{ color: 'var(--accent)', flex: 'none', marginTop: 1 }} />
+              <div><div style={{ fontSize: '13px', fontWeight: 650, color: 'var(--ink)' }}>{current?.title}</div><div style={{ fontSize: '11.75px', color: 'var(--mut)', lineHeight: 1.45, marginTop: 2 }}>This is the MFA method configured for your superadmin account.</div></div>
+            </div>
+            {isCode ? <>
+              <Field label="One-time code"><input className="inp mono" inputMode="numeric" maxLength="6" placeholder="Enter 6-digit code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} autoFocus /></Field>
+              <div className="hrow" style={{ justifyContent: 'space-between', marginTop: 8 }}><span style={{ fontSize: '11.5px', color: 'var(--mut)' }}>Code expires in 5 minutes.</span><span className="link" style={{ fontSize: '12px' }} onClick={() => toast('ok', 'Code resent', 'A new verification code has been sent (demo).')}>Resend code</span></div>
+              <button className="btn btn-pri" style={{ width: '100%', justifyContent: 'center', marginTop: 18, opacity: code.length === 6 ? 1 : .55 }} disabled={code.length !== 6} onClick={verify}>Verify and continue</button>
+            </> : <>
+              <div style={{ fontSize: '12.5px', color: 'var(--mut)', lineHeight: 1.55, marginBottom: 16 }}>Use your registered passkey or security key to verify your identity and unlock this credential.</div>
+              <button className="btn btn-pri" style={{ width: '100%', justifyContent: 'center' }} onClick={verify}><Icon name="fingerprint" size={16} />Verify with passkey</button>
+            </>}
+          </>}
+
+          {stage === 'ready' && <>
+            <div className="hrow" style={{ gap: 10, alignItems: 'flex-start', padding: '11px 13px', border: '1px solid var(--ok-line)', background: 'var(--ok-bg)', borderRadius: 'var(--r-sm)', marginBottom: 16 }}><Icon name="check" size={16} style={{ color: 'var(--ok)', flex: 'none', marginTop: 1 }} /><div><div style={{ fontSize: '13px', fontWeight: 650, color: 'var(--ink)' }}>Identity verified</div><div style={{ fontSize: '11.75px', color: 'var(--mut)', marginTop: 2 }}>Credentials remain hidden. Select only the account you need to unhide; each action is audited.</div></div></div>
+            <div style={{ fontSize: '12.5px', color: 'var(--ink-2)', lineHeight: 1.55 }}>Return to the vault to selectively unhide a password or private key. Other credentials will remain sealed.</div>
+            <div className="hrow" style={{ justifyContent: 'flex-end', marginTop: 18 }}><button className="btn btn-pri" onClick={onReady}>Return to vault</button></div>
+          </>}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function VaultDrawer({ cred: c, onReveal }) {
   const { toast, go, closeDrawer } = useApp()
-  const s = PROTO_STYLE[c.proto]
-  const reveal = (u) => toast('warn', 'MFA challenge required', `Revealing ${u}@${c.name} triggers an MFA step-up — every time (demo).`)
+  const [verified, setVerified] = useState(false)
+  const [unhidden, setUnhidden] = useState(() => new Set())
+  const toggleSecret = (user) => setUnhidden((current) => { const next = new Set(current); next.has(user) ? next.delete(user) : next.add(user); return next })
+  const requestVerification = (account) => onReveal(c, account, () => setVerified(true))
   const ACCESS = [
     ['Reveal', 'MFA challenge required, every time'],
     ['Injection', 'Credential is injected at connect — users never see it'],
@@ -89,23 +184,28 @@ function VaultDrawer({ cred: c }) {
         <div className="hrow" style={{ ...label, margin: '16px 0 6px', justifyContent: 'space-between' }}>
           <span>Stored accounts · {c.accounts.length}</span>
         </div>
-        {c.accounts.map((a) => (
-          <div key={a.user} className="hrow" style={{ justifyContent: 'space-between', gap: 12, padding: '11px 0', borderBottom: '1px solid var(--hair)' }}>
-            <div className="hrow" style={{ gap: 10, minWidth: 0 }}>
-              <AcctIcon kind={a.kind} />
-              <div style={{ minWidth: 0 }}>
-                <div className="mono" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>{a.user}</div>
-                <div style={{ fontSize: '11.5px', color: 'var(--mut)', marginTop: 1 }}>{a.kind}{a.fp ? ` · ${a.fp}` : ''} · updated {a.updated}</div>
+        {c.accounts.map((a) => {
+          const visible = unhidden.has(a.user)
+          const secret = a.kind === 'SSH key' ? '-----BEGIN OPENSSH PRIVATE KEY-----' : 'P@ssw0rd!2026'
+          return <div key={a.user} style={{ padding: '11px 0', borderBottom: '1px solid var(--hair)' }}>
+            <div className="hrow" style={{ justifyContent: 'space-between', gap: 12 }}>
+              <div className="hrow" style={{ gap: 10, minWidth: 0 }}>
+                <AcctIcon kind={a.kind} />
+                <div style={{ minWidth: 0 }}>
+                  <div className="mono" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>{a.user}</div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--mut)', marginTop: 1 }}>{a.kind}{a.fp ? ` · ${a.fp}` : ''} · updated {a.updated}</div>
+                </div>
+              </div>
+              <div className="hrow" style={{ gap: 6, flex: 'none' }}>
+                <span style={securedPill}>SECURED</span>
+                <button className="btn btn-sec btn-sm" title={verified ? (visible ? 'Hide secret' : 'Unhide secret') : 'Verify identity first'} onClick={() => verified ? toggleSecret(a.user) : requestVerification(a)}><Icon name={visible ? 'lock' : 'eye'} size={13} />{visible ? 'Hide' : verified ? 'Unhide' : 'Verify'}</button>
+                <button className="mini-btn" title="Edit" onClick={() => toast('ok', 'Edit account', `Edit ${a.user}@${c.name} (demo).`)}><Icon name="edit" size={14} /></button>
+                <button className="mini-btn danger" title="Delete" onClick={() => toast('warn', 'Delete account', `Removing ${a.user}@${c.name} requires dual-control approval (demo).`)}><Icon name="trash" size={14} /></button>
               </div>
             </div>
-            <div className="hrow" style={{ gap: 6, flex: 'none' }}>
-              <span style={securedPill}>SECURED</span>
-              <button className="mini-btn" title="Reveal (MFA)" onClick={() => reveal(a.user)}><Icon name="eye" size={14} /></button>
-              <button className="mini-btn" title="Edit" onClick={() => toast('ok', 'Edit account', `Edit ${a.user}@${c.name} (demo).`)}><Icon name="edit" size={14} /></button>
-              <button className="mini-btn danger" title="Delete" onClick={() => toast('warn', 'Delete account', `Removing ${a.user}@${c.name} requires dual-control approval (demo).`)}><Icon name="trash" size={14} /></button>
-            </div>
+            {visible && <div className="hrow mono" style={{ justifyContent: 'space-between', gap: 10, marginTop: 10, padding: '9px 10px', border: '1px solid var(--accent-line)', background: 'var(--accent-bg)', borderRadius: 'var(--r-sm)', fontSize: '11.5px', color: 'var(--ink)' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{secret}</span><span style={{ fontFamily: 'var(--sans)', fontSize: '10.5px', color: 'var(--accent)', fontWeight: 650, flex: 'none' }}>VISIBLE</span></div>}
           </div>
-        ))}
+        })}
         <button className="btn btn-sec btn-sm" style={{ marginTop: 12 }} onClick={() => toast('ok', 'Add account', `Add a stored account to ${c.name} (demo).`)}><Icon name="plus" size={13} />Add account</button>
 
         <div style={{ ...label, margin: '22px 0 6px' }}>Access</div>
@@ -133,7 +233,7 @@ const Field = ({ label: l, children }) => (
 
 function AddCredentialModal({ onClose }) {
   const { toast } = useApp()
-  const [f, setF] = useState({ target: '', proto: 'SSH', user: '', kind: 'Password', secret: '', mfa: true })
+  const [f, setF] = useState({ target: '', proto: 'SSH', user: '', kind: 'Password', secret: '' })
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }))
   const ok = f.target.trim() && f.user.trim()
   const add = () => { toast('ok', 'Credential added', `${f.user}@${f.target} vaulted as ${f.kind.toLowerCase()} — reveal is MFA-gated (demo).`); onClose() }
@@ -159,9 +259,9 @@ function AddCredentialModal({ onClose }) {
               <Field label="Credential type"><select className="sel" value={f.kind} onChange={set('kind')}><option>Password</option><option>SSH key</option></select></Field>
             </div>
             <Field label={f.kind === 'SSH key' ? 'Private key' : 'Password'}><input className="inp" type="password" placeholder={f.kind === 'SSH key' ? 'Paste key — sealed to the vault' : 'Sealed to the vault · write-only'} value={f.secret} onChange={set('secret')} /></Field>
-            <div className="hrow" style={{ justifyContent: 'space-between', padding: '11px 13px', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', background: 'var(--surface-2)' }}>
-              <div><div style={{ fontSize: '13px', fontWeight: 600 }}>MFA-gated reveal</div><div style={{ fontSize: '11.5px', color: 'var(--mut)' }}>Challenge on every reveal, independent of enforcement.</div></div>
-              <span className={`toggle ${f.mfa ? 'on' : ''}`} onClick={() => setF((p) => ({ ...p, mfa: !p.mfa }))} />
+            <div className="hrow" style={{ gap: 9, alignItems: 'flex-start', padding: '11px 13px', border: '1px solid var(--accent-line)', borderRadius: 'var(--r-sm)', background: 'var(--accent-bg)' }}>
+              <Icon name="shieldCheck" size={16} style={{ color: 'var(--accent)', flex: 'none', marginTop: 1 }} />
+              <div><div style={{ fontSize: '13px', fontWeight: 600 }}>Always MFA-gated on reveal</div><div style={{ fontSize: '11.5px', color: 'var(--mut)', marginTop: 2 }}>Every secret reveal requires superadmin step-up verification. This cannot be disabled per credential.</div></div>
             </div>
           </div>
           <div className="hrow" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
@@ -179,15 +279,24 @@ export default function Vault() {
   const [q, setQ] = useState('')
   const [view, setView] = useState('grid')
   const [addOpen, setAddOpen] = useState(false)
+  const [protoFilter, setProtoFilter] = useState(null)
+  const [mfaMethod, setMfaMethod] = useState(null)
+  const [revealRequest, setRevealRequest] = useState(null)
+  const [revealStage, setRevealStage] = useState(null)
 
   const creds = VAULT.reduce((n, t) => n + t.accounts.length, 0)
   const sshKeys = VAULT.reduce((n, t) => n + t.accounts.filter((a) => a.kind === 'SSH key').length, 0)
   const chips = PROTOS.map((p) => [p, VAULT.filter((t) => t.proto === p).reduce((n, t) => n + t.accounts.length, 0), PROTO_STYLE[p].icon]).filter((c) => c[1] > 0)
 
-  const matches = (t) => !q || (t.name + t.host + t.proto + t.accounts.map((a) => a.user).join(' ')).toLowerCase().includes(q.toLowerCase())
+  const matches = (t) => (!protoFilter || t.proto === protoFilter) && (!q || (t.name + t.host + t.proto + t.accounts.map((a) => a.user).join(' ')).toLowerCase().includes(q.toLowerCase()))
   const rows = VAULT.filter(matches)
-  const open = (c) => openDrawer(<VaultDrawer cred={c} />)
-  const reveal = (e, c) => { e.stopPropagation(); toast('warn', 'MFA challenge required', `Revealing a credential on ${c.name} triggers an MFA step-up — every time (demo).`) }
+  const visibleCreds = rows.reduce((n, t) => n + t.accounts.length, 0)
+  const requestReveal = (target, account = target.accounts[0], onReady) => { setRevealRequest({ target, account, onReady }); setRevealStage('intro') }
+  const open = (c) => openDrawer(<VaultDrawer cred={c} onReveal={requestReveal} />)
+  const reveal = (e, c) => { e.stopPropagation(); open(c) }
+  const closeReveal = () => { setRevealRequest(null); setRevealStage(null) }
+  const continueReveal = () => setRevealStage(mfaMethod ? 'challenge' : 'enroll')
+  const chooseMethod = (method) => { setMfaMethod(method); setRevealStage('challenge') }
 
   return (
     <>
@@ -209,18 +318,19 @@ export default function Vault() {
         <VStat icon="lock" num="100%" text="MFA-gated" green />
         <div className="card card-pad" style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
-            {chips.map(([n, ct, ic]) => (
-              <span key={n} className="hrow" style={{ gap: 7, padding: '6px 11px', border: '1px solid var(--line)', borderRadius: 999, fontSize: '12.5px', color: 'var(--ink-2)' }}>
-                <Icon name={ic} size={13} style={{ color: 'var(--mut)' }} />{n}<span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--mut)', background: 'var(--surface-2)', borderRadius: 999, padding: '1px 7px' }}>{ct}</span>
-              </span>
-            ))}
+            {chips.map(([n, ct, ic]) => {
+              const active = protoFilter === n
+              return <button key={n} className="hrow" aria-pressed={active} title={`Filter to ${n}`} onClick={() => setProtoFilter((current) => current === n ? null : n)} style={{ gap: 7, padding: '6px 11px', border: `1px solid ${active ? 'var(--accent-line)' : 'var(--line)'}`, borderRadius: 999, fontSize: '12.5px', fontWeight: active ? 650 : 400, color: active ? 'var(--accent)' : 'var(--ink-2)', background: active ? 'var(--accent-bg)' : 'var(--surface)', boxShadow: active ? 'var(--sh-focus)' : 'none', transition: 'background .12s, border-color .12s' }}>
+                <Icon name={ic} size={13} style={{ color: active ? 'var(--accent)' : 'var(--mut)' }} />{n}<span style={{ fontSize: '11px', fontWeight: 700, color: active ? 'var(--accent)' : 'var(--mut)', background: active ? 'rgba(255,255,255,.55)' : 'var(--surface-2)', borderRadius: 999, padding: '1px 7px' }}>{ct}</span>
+              </button>
+            })}
           </div>
         </div>
       </div>
 
       <div className="card">
         <div className="toolbar" style={{ flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-2)' }}>{creds} credentials across {VAULT.length} targets</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-2)' }}>{visibleCreds} credential{visibleCreds === 1 ? '' : 's'} across {rows.length} target{rows.length === 1 ? '' : 's'}{protoFilter ? ` · ${protoFilter}` : ''}</span>
           <div className="tb-spacer" />
           <button className="icon-btn" title="List view" style={view === 'list' ? { color: 'var(--accent)', borderColor: 'var(--accent-line)' } : undefined} onClick={() => setView('list')}><Icon name="list" size={15} /></button>
           <button className="icon-btn" title="Grid view" style={view === 'grid' ? { color: 'var(--accent)', borderColor: 'var(--accent-line)' } : undefined} onClick={() => setView('grid')}><Icon name="grid" size={15} /></button>
@@ -232,7 +342,7 @@ export default function Vault() {
             <div className="e-ic"><Icon name="search" size={22} /></div>
             <div className="e-t">No credentials match</div>
             <div className="e-s">Try a different host, username or protocol.</div>
-            <button className="btn btn-sec btn-sm" style={{ marginTop: 16 }} onClick={() => setQ('')}><Icon name="refresh" size={13} />Clear search</button>
+            <button className="btn btn-sec btn-sm" style={{ marginTop: 16 }} onClick={() => { setQ(''); setProtoFilter(null) }}><Icon name="refresh" size={13} />Clear filters</button>
           </div>
         ) : view === 'grid' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 16 }}>
@@ -285,6 +395,16 @@ export default function Vault() {
       </div>
 
       {addOpen && <AddCredentialModal onClose={() => setAddOpen(false)} />}
+      {revealRequest && <VaultMfaModal
+        request={revealRequest}
+        method={mfaMethod}
+        stage={revealStage}
+        onClose={closeReveal}
+        onContinue={continueReveal}
+        onChooseMethod={chooseMethod}
+        onVerified={() => setRevealStage('ready')}
+        onReady={() => { revealRequest.onReady?.(); closeReveal() }}
+      />}
     </>
   )
 }

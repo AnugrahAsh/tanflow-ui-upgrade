@@ -24,6 +24,13 @@ const CONNS = [
   C('BTS LAB', 'BTSPAMDEV01', 'SSH', 'commands', '10.0.0.57', 'DEV', 'direct', { grant: 'Standing', used: '1 day ago', sessions: 61, policy: 'Lab-Standard' }),
   C('LOCAL TOOLS', 'LOCALSUPPORTDB', 'POSTGRESQL', 'db', 'localhost:5432', 'LOCAL', 'direct', { grant: 'Standing', used: '2 mos ago', sessions: 5, policy: 'Local' }),
 ]
+const snapshot = (title, accent, detail) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><rect width="640" height="360" fill="#111827"/><rect width="640" height="42" fill="#1f2937"/><circle cx="20" cy="21" r="6" fill="#ef4444"/><circle cx="40" cy="21" r="6" fill="#f59e0b"/><circle cx="60" cy="21" r="6" fill="#22c55e"/><text x="88" y="27" fill="#dbeafe" font-family="Arial, sans-serif" font-size="16" font-weight="700">${title}</text><rect x="22" y="64" width="596" height="250" fill="#0b1220" stroke="${accent}" stroke-width="2"/><rect x="42" y="88" width="190" height="12" fill="${accent}" opacity=".9"/><rect x="42" y="118" width="360" height="8" fill="#64748b" opacity=".75"/><rect x="42" y="142" width="290" height="8" fill="#475569"/><rect x="42" y="182" width="180" height="70" fill="#172554"/><rect x="242" y="182" width="150" height="70" fill="#172554"/><rect x="412" y="182" width="170" height="70" fill="#172554"/><text x="42" y="286" fill="#94a3b8" font-family="Arial, sans-serif" font-size="15">${detail}</text></svg>`)}`
+const RECENT = [
+  { target: CONNS[0], at: 'Today, 14:32', duration: '48 min', activity: 'Server Manager · Event Viewer', image: snapshot('TANFLOWAD01 — Remote Desktop', '#38bdf8', 'Last activity: reviewing domain controller health') },
+  { target: CONNS[3], at: 'Yesterday, 18:07', duration: '26 min', activity: 'SSH · deployment verification', image: snapshot('TANFLOWAPP01 — SSH', '#34d399', 'Last activity: systemctl status tanflow-api') },
+  { target: CONNS[6], at: 'Yesterday, 11:14', duration: '12 min', activity: 'PostgreSQL · query console', image: snapshot('BTSIDAMDEMODB01 — PostgreSQL', '#60a5fa', 'Last activity: SELECT audit events') },
+  { target: CONNS[5], at: '04 Aug, 16:42', duration: '34 min', activity: 'SSH · retest evidence', image: snapshot('BTSIAMRETEST01 — SSH', '#fbbf24', 'Last activity: checking authentication logs') },
+]
 const GROUP_ORDER = ['TANFLOW CORE', 'BTS LAB', 'LOCAL TOOLS']
 const PROTOCOLS = [...new Set(CONNS.map((c) => c.proto))]
 const SCOPES = ['Everything I can request', 'Standing grants', 'Time-boxed / JIT-gated']
@@ -97,6 +104,19 @@ export default function MyConnections() {
   const [favs, setFavs] = useState(() => new Set(CONNS.filter((c) => c.pinned).map((c) => c.name)))
   const toggleFav = (name) => setFavs((prev) => { const n = new Set(prev); if (n.has(name)) n.delete(name); else n.add(name); return n })
   const [findOpen, setFindOpen] = useState(false)
+  const recentRailRef = useRef(null)
+  const [recentNav, setRecentNav] = useState({ atStart: true, atEnd: false })
+
+  const moveRecent = (direction) => {
+    const rail = recentRailRef.current
+    if (rail) rail.scrollBy({ left: direction * Math.round(rail.clientWidth * 0.82), behavior: 'smooth' })
+  }
+  const syncRecentNav = () => {
+    const rail = recentRailRef.current
+    if (!rail) return
+    const overflow = rail.scrollWidth - rail.clientWidth
+    setRecentNav({ atStart: rail.scrollLeft <= 2, atEnd: rail.scrollLeft >= overflow - 2 })
+  }
 
   const now = new Date()
   const h = now.getHours()
@@ -186,6 +206,34 @@ export default function MyConnections() {
         <KpiTile label="Needs approval" icon="lock" val={K.approval} foot="JIT or dual-control targets" />
         <KpiTile label="Used this week" icon="clock" val={K.week} foot="targets you have opened" />
         <KpiTile label="Grants expiring" icon="warnTri" val={K.expiring} foot="renew before they lapse" />
+      </div>
+
+      <div className="card recent-connections" style={{ marginBottom: 16, overflow: 'hidden' }}>
+        <div className="hrow" style={{ justifyContent: 'space-between', gap: 12, padding: '13px 16px', borderBottom: '1px solid var(--hair)', flexWrap: 'wrap' }}>
+          <div><div style={{ fontSize: '14px', fontWeight: 750, color: 'var(--ink)' }}>Recent connections</div><div style={{ fontSize: '11.75px', color: 'var(--mut)', marginTop: 2 }}>Last recorded activity is captured as the session closes.</div></div>
+          <div className="hrow" style={{ gap: 8 }}>
+            <div className="recent-carousel-controls" aria-label="Recent connections navigation">
+              <button className="mini-btn" title="Previous recent connections" aria-label="Previous recent connections" disabled={recentNav.atStart} onClick={() => moveRecent(-1)}><Icon name="arrowLeft" size={13} /></button>
+              <button className="mini-btn" title="Next recent connections" aria-label="Next recent connections" disabled={recentNav.atEnd} onClick={() => moveRecent(1)}><Icon name="arrowRight" size={13} /></button>
+            </div>
+            <button className="btn btn-sec btn-sm" onClick={() => go('recordings')}><Icon name="recordings" size={13} />View all history</button>
+          </div>
+        </div>
+        <div className="recent-carousel-wrap">
+          <div className="recent-carousel" ref={recentRailRef} onScroll={syncRecentNav}>
+          {RECENT.map((item) => (
+            <article key={item.target.name} className="recent-carousel-card">
+              <button title={`Open ${item.target.name}`} onClick={() => openConn(item.target)} style={{ display: 'block', width: '100%', padding: 0, textAlign: 'left', background: '#111827' }}><img src={item.image} alt={`Last activity on ${item.target.name}`} style={{ display: 'block', width: '100%', aspectRatio: '16 / 8', objectFit: 'contain', borderBottom: '2px solid var(--accent-line)' }} /></button>
+              <div style={{ padding: '10px 11px 11px' }}>
+                <div className="hrow" style={{ gap: 8, minWidth: 0 }}><ProtoTile icon={item.target.icon} proto={item.target.proto} size={26} /><span style={{ fontSize: '12.75px', fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.target.name}</span></div>
+                <div style={{ fontSize: '10px', color: 'var(--faint)', fontWeight: 700, letterSpacing: '.06em', marginTop: 8 }}>LAST ACTIVITY</div>
+                <div className="mono" style={{ fontSize: '10.75px', color: 'var(--mut)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.activity}</div>
+                <div className="hrow" style={{ justifyContent: 'space-between', gap: 8, marginTop: 9, paddingTop: 8, borderTop: '1px solid var(--hair)' }}><span style={{ fontSize: '11px', color: 'var(--mut)' }}>{item.at} · {item.duration}</span><span className="hrow" style={{ gap: 5 }}><button className="mini-btn" title="Open recording" onClick={() => go('recordings')}><Icon name="play" size={12} /></button><button className="mini-btn" title="Reconnect" onClick={() => setTarget(item.target)}><Icon name="external" size={12} /></button></span></div>
+              </div>
+            </article>
+          ))}
+          </div>
+        </div>
       </div>
 
       <div className="card">

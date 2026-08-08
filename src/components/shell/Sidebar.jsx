@@ -37,6 +37,7 @@ const SECTIONS = [
   ] },
   { title: 'SECURITY', items: [
     { label: 'MFA', icon: 'fingerprint', route: 'mfa' },
+    { label: 'LDAP Integration', icon: 'directory', route: 'ldap' },
     { label: 'Password Vault', icon: 'vault', route: 'vault' },
     { label: 'Command Restrictions', icon: 'commands', route: 'commands' },
   ] },
