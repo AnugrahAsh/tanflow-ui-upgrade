@@ -59,6 +59,8 @@ const EXTRA_ROUTES = [
   ['mfa', 'MFA', 'Security'],
   ['vault', 'Password Vault', 'Security'],
   ['commands', 'Command Restrictions', 'Security'],
+  ['credential-sets', 'Credential Sets', 'Security'],
+  ['vault-rotation', 'Credential Rotation', 'Security'],
 ]
 EXTRA_ROUTES.forEach(([id, label, group]) => { ROUTE_META[id] = { id, label, group, badge: null } })
 

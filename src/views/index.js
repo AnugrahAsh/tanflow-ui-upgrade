@@ -53,6 +53,8 @@ import CreateConnectionGroup from './CreateConnectionGroup.jsx'
 import LicenseV2 from './LicenseV2.jsx'
 import SelectProtocol from './SelectProtocol.jsx'
 import MyConnections from './MyConnections.jsx'
+import CredentialSets from './CredentialSets.jsx'
+import VaultRotation from './VaultRotation.jsx'
 
 // Route id -> view component. Every id in the nav model is now implemented.
 export const VIEWS = {
@@ -110,4 +112,6 @@ export const VIEWS = {
   'license-v2': LicenseV2,
   'select-protocol': SelectProtocol,
   'my-connections': MyConnections,
+  'credential-sets': CredentialSets,
+  'vault-rotation': VaultRotation,
 }

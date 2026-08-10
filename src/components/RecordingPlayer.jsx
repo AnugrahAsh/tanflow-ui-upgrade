@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import Icon from './Icon.jsx'
 import { useApp } from '../context/AppContext.jsx'
+import RecordingExportModal from './RecordingExportModal.jsx'
+import SessionTypescript from './SessionTypescript.jsx'
 
 const DURATION = 662 // 11:02
 const SPEED_MULT = [1, 1.5, 2]
@@ -69,6 +71,7 @@ export default function RecordingPlayer({ rec, onClose }) {
   const [screen, setScreen] = useState(true)
   const [keys, setKeys] = useState(true)
   const [logs, setLogs] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [fs, setFs] = useState(false)
   const [pos, setPos] = useState(0)
   const seek = (d) => setPos((p) => Math.max(0, Math.min(DURATION, p + d)))
@@ -136,6 +139,7 @@ export default function RecordingPlayer({ rec, onClose }) {
               <button title="Forward 15s" onClick={() => seek(15)} style={{ color: '#c7cede' }}><Icon name="chevR" size={20} /></button>
             </div>
             <div className="hrow" style={{ gap: 8 }}>
+              <button style={chip} onClick={() => setExportOpen(true)}><Icon name="download" size={13} />Export</button>
               <button style={{ ...chip, background: logs ? '#7C3AED' : '#161b2e', color: '#fff', borderColor: logs ? '#7C3AED' : '#232a44' }} onClick={() => setLogs((v) => !v)}><Icon name="reports" size={13} />Logs</button>
               <button style={chip} onClick={() => setFs((v) => !v)}><Icon name={fs ? 'x' : 'external'} size={14} /></button>
             </div>
@@ -150,10 +154,12 @@ export default function RecordingPlayer({ rec, onClose }) {
               <button onClick={() => setLogs(false)} style={{ color: '#8b93a7' }}><Icon name="x" size={15} /></button>
             </div>
             <div style={{ padding: '0 16px 14px' }}><input placeholder="Filter keystrokes…" style={{ width: '100%', background: '#141a2c', border: '1px solid #232a44', borderRadius: 'var(--r-sm)', padding: '8px 11px', color: '#c7cede', fontSize: 12.5 }} /></div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a6480', fontSize: 13 }}>No keystroke logs available</div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}><SessionTypescript compact /></div>
           </div>
         )}
       </div>
+
+      {exportOpen && <RecordingExportModal rec={rec} onClose={() => setExportOpen(false)} />}
     </div>
   )
 }

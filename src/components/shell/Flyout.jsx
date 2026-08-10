@@ -1,6 +1,7 @@
 import Icon from '../Icon.jsx'
 import { Avatar, Badge } from '../primitives.jsx'
 import { useApp } from '../../context/AppContext.jsx'
+import LastLogin from '../LastLogin.jsx'
 import { NOTIFS } from '../../data/mockData.js'
 
 const USER_ITEMS = [
@@ -25,6 +26,9 @@ export default function Flyout() {
               <div style={{ marginTop: 5 }}><Badge tone="acc" label="Global Security Admin" dot={false} /></div>
             </div>
           </div>
+          <div style={{ padding: '10px 10px 0' }}>
+            <LastLogin onReview={() => go('audit')} />
+          </div>
           <div style={{ padding: 8 }}>
             {USER_ITEMS.map(([icon, label]) => (
               <button key={label} className="pal-it" onClick={() => toast('ok', label, 'Opens in the full product.')}>
@@ -32,7 +36,7 @@ export default function Flyout() {
               </button>
             ))}
             <div className="divider" style={{ margin: '6px 4px' }} />
-            <button className="pal-it" style={{ color: 'var(--bad)' }} onClick={() => toast('warn', 'Signed out', 'Session ended (demo).')}>
+            <button className="pal-it" style={{ color: 'var(--bad)' }} onClick={() => go('logged-out?reason=signout')}>
               <Icon name="logout" size={15} />Sign out
             </button>
           </div>

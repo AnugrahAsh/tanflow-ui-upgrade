@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Icon from '../Icon.jsx'
 import { useApp } from '../../context/AppContext.jsx'
+import LicenseGraceChip from '../LicenseGraceChip.jsx'
 
 const HEALTH = [
   ['CPU', '2%', 'load 0.00', 2],
@@ -47,6 +48,7 @@ export default function StatusBar() {
       <span className="sb-it sb-optional">Tenant <b className="mono">meridian-prod</b></span>
       <span className="sb-it">Tanflow Cloud <b className="mono">v6.2.1</b></span>
       <span className="sb-it"><b className="mono num">{clock}</b>&nbsp;UTC</span>
+      <LicenseGraceChip />
       <span className="sb-it"><span className="sb-dot ok" />Connected</span>
     </footer>
   )

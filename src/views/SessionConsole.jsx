@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import { useApp } from '../context/AppContext.jsx'
+import TunnelCreationModal from '../components/TunnelCreationModal.jsx'
 
 const lbl = { fontSize: 10.5, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--faint)' }
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
@@ -118,6 +119,7 @@ export default function SessionConsole() {
     { name: 'Change #4821', role: 'Approver · idle' },
   ])
   const [dev, setDev] = useState({ clip: true, file: true, audio: true, printer: false, drive: false })
+  const [connecting, setConnecting] = useState(true) // gateway handshake overlay
   const movedRef = useRef(false)
   const toolbarTimerRef = useRef(null)
 
@@ -340,6 +342,8 @@ export default function SessionConsole() {
           )}
         </div>
       </div>
+
+      {connecting && <TunnelCreationModal target={name} proto={proto} onDone={() => setConnecting(false)} onCancel={close} />}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { Badge } from '../components/primitives.jsx'
 import { SubLabel } from './formKit.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { PROFILE } from '../data/mockData.js'
+import AvatarCropModal from '../components/AvatarCropModal.jsx'
 
 // ── page-local detail ────────────────────────────────────────────────────────
 const STATS = [
@@ -190,6 +191,7 @@ export default function MyProfile() {
   const [tab, setTab] = useState('roles')
   const [pwOpen, setPwOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
   const [filter, setFilter] = useState('')
   const conns = CONNECTIONS.filter((c) => !filter || c.name.toLowerCase().includes(filter.toLowerCase()) || c.proto.toLowerCase().includes(filter.toLowerCase()))
 
@@ -203,7 +205,7 @@ export default function MyProfile() {
           <div className="hrow" style={{ gap: 18, alignItems: 'flex-start' }}>
             <div style={{ position: 'relative', width: 72, height: 72, flex: 'none' }}>
               <div style={{ width: 72, height: 72, borderRadius: '50%', background: PROFILE.avatarColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 700 }}>{PROFILE.initials}</div>
-              <button className="icon-btn" title="Change photo" onClick={() => toast('ok', 'Change photo', 'Upload a new profile picture (demo).')}
+              <button className="icon-btn" title="Change photo" onClick={() => setPhotoOpen(true)}
                 style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', color: '#fff', boxShadow: '0 0 0 3px var(--surface)' }}><CameraIcon /></button>
             </div>
             <div style={{ minWidth: 0 }}>
@@ -328,6 +330,7 @@ export default function MyProfile() {
         </div>
       </div>
 
+      {photoOpen && <AvatarCropModal name={PROFILE.name} onClose={() => setPhotoOpen(false)} />}
       {editOpen && <EditDetailsModal onClose={() => setEditOpen(false)} />}
       {pwOpen && <ChangePasswordModal onClose={() => setPwOpen(false)} />}
     </>
