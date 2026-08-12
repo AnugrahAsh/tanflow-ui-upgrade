@@ -29,7 +29,7 @@ export function useLoginForm(defaultEmail = '') {
 }
 
 export function Logo({ variant = 'color', height = 30, style }) {
-  const src = variant === 'white' ? 'assets/brand/tanflow-logo-1200w-white.png' : 'assets/brand/tanflow-logo-1200w.png'
+  const src = variant === 'white' ? 'assets/brand/tanflow-white.png' : 'assets/brand/tanflow-logo-1200w.png'
   return <img src={src} alt="Tanflow" style={{ height, width: 'auto', display: 'block', ...style }} />
 }
 

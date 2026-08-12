@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2000" preserveAspectRatio="xMidYMid slice" width="1600" height="2000">
+  <!-- Deep-blue pleated "curtain" field with a cyan glow low-centre.
+       Generated stand-in for the supplied reference image; drop the original in
+       as aurora-pleats.jpg and swap the path to use it verbatim. -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#031034"/>
+      <stop offset="0.35" stop-color="#072278"/>
+      <stop offset="0.72" stop-color="#0A34C4"/>
+      <stop offset="1" stop-color="#0526A0"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="0.58" cy="0.72" r="0.42">
+      <stop offset="0" stop-color="#7DF0FF" stop-opacity="0.95"/>
+      <stop offset="0.28" stop-color="#26B6F5" stop-opacity="0.6"/>
+      <stop offset="0.62" stop-color="#0B49D8" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#072278" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow2" cx="0.9" cy="0.42" r="0.3">
+      <stop offset="0" stop-color="#5FD8FF" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#072278" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="vignette" cx="0.5" cy="0.55" r="0.78">
+      <stop offset="0.45" stop-color="#000814" stop-opacity="0"/>
+      <stop offset="1" stop-color="#00060F" stop-opacity="0.8"/>
+    </radialGradient>
+
+    <!-- One pleat: a soft highlight running down a narrow vertical band. -->
+    <linearGradient id="pleat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.42" stop-color="#BFEBFF" stop-opacity="0.30"/>
+      <stop offset="0.52" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="0.62" stop-color="#8FD6FF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="crease" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#010A2E" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#010A2E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#010A2E" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="softer" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+
+    <!-- Vertical fade so pleats read strongest across the middle band. -->
+    <linearGradient id="fadeY" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="0.28" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.82" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.5"/>
+    </linearGradient>
+    <mask id="pleatMask">
+      <rect width="1600" height="2000" fill="url(#fadeY)"/>
+    </mask>
+  </defs>
+
+  <rect width="1600" height="2000" fill="url(#base)"/>
+
+  <!-- Pleats. Each band is skewed slightly so the folds sweep like fabric. -->
+  <g mask="url(#pleatMask)" filter="url(#soft)">
+    <g transform="skewX(-4)">
+      <rect x="20"   y="-120" width="26" height="2240" fill="url(#pleat)"/>
+      <rect x="84"   y="-120" width="20" height="2240" fill="url(#crease)"/>
+      <rect x="132"  y="-120" width="30" height="2240" fill="url(#pleat)" opacity="0.9"/>
+      <rect x="206"  y="-120" width="18" height="2240" fill="url(#crease)"/>
+      <rect x="252"  y="-120" width="34" height="2240" fill="url(#pleat)" opacity="0.75"/>
+      <rect x="330"  y="-120" width="22" height="2240" fill="url(#crease)"/>
+      <rect x="380"  y="-120" width="28" height="2240" fill="url(#pleat)" opacity="0.85"/>
+      <rect x="452"  y="-120" width="20" height="2240" fill="url(#crease)"/>
+      <rect x="500"  y="-120" width="32" height="2240" fill="url(#pleat)" opacity="0.7"/>
+      <rect x="578"  y="-120" width="18" height="2240" fill="url(#crease)"/>
+      <rect x="624"  y="-120" width="30" height="2240" fill="url(#pleat)" opacity="0.9"/>
+      <rect x="700"  y="-120" width="22" height="2240" fill="url(#crease)"/>
+      <rect x="752"  y="-120" width="36" height="2240" fill="url(#pleat)"/>
+      <rect x="836"  y="-120" width="20" height="2240" fill="url(#crease)"/>
+      <rect x="884"  y="-120" width="30" height="2240" fill="url(#pleat)" opacity="0.95"/>
+      <rect x="960"  y="-120" width="18" height="2240" fill="url(#crease)"/>
+      <rect x="1006" y="-120" width="34" height="2240" fill="url(#pleat)" opacity="0.8"/>
+      <rect x="1086" y="-120" width="22" height="2240" fill="url(#crease)"/>
+      <rect x="1136" y="-120" width="28" height="2240" fill="url(#pleat)" opacity="0.9"/>
+      <rect x="1208" y="-120" width="20" height="2240" fill="url(#crease)"/>
+      <rect x="1256" y="-120" width="32" height="2240" fill="url(#pleat)" opacity="0.75"/>
+      <rect x="1334" y="-120" width="18" height="2240" fill="url(#crease)"/>
+      <rect x="1382" y="-120" width="30" height="2240" fill="url(#pleat)" opacity="0.85"/>
+      <rect x="1458" y="-120" width="22" height="2240" fill="url(#crease)"/>
+      <rect x="1508" y="-120" width="34" height="2240" fill="url(#pleat)" opacity="0.7"/>
+    </g>
+  </g>
+
+  <!-- Light. The cyan core sits low-centre, with a cooler bloom upper-right. -->
+  <rect width="1600" height="2000" fill="url(#glow2)"/>
+  <rect width="1600" height="2000" fill="url(#glow)"/>
+
+  <!-- Sweeping folds that catch the light diagonally. -->
+  <g filter="url(#softer)" opacity="0.5">
+    <path d="M -60 620 Q 420 380 900 560 T 1700 470" fill="none" stroke="#9FE8FF" stroke-opacity="0.35" stroke-width="46"/>
+    <path d="M -60 1080 Q 460 860 940 1040 T 1700 930" fill="none" stroke="#6FD6FF" stroke-opacity="0.28" stroke-width="60"/>
+    <path d="M -60 300 Q 380 150 860 260 T 1700 180" fill="none" stroke="#BFEBFF" stroke-opacity="0.18" stroke-width="34"/>
+  </g>
+
+  <rect width="1600" height="2000" fill="url(#vignette)"/>
+</svg>
